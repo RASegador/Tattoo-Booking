@@ -73,7 +73,7 @@ const DEFAULT_STUDIO_INFO: StudioInfo = {
 
 async function getStudioInfo(): Promise<StudioInfo> {
   try {
-    const rows = await sql`SELECT content FROM site_content WHERE section_key = 'studio_info' LIMIT 1`;
+    const rows = await sql`SELECT content FROM site_content WHERE section_key = ${'studio_info'} LIMIT 1`;
     const content = rows[0]?.content as Partial<StudioInfo> | undefined;
     return { ...DEFAULT_STUDIO_INFO, ...(content || {}) };
   } catch {
