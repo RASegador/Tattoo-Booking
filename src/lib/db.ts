@@ -1,7 +1,17 @@
 import { neon } from '@neondatabase/serverless';
 import { categories as seedCategories, getArtworksForCategory, reviews as seedReviews } from './data';
 
-export const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || '');
+// fetchOptions: { cache: 'no-store' } is required here — this driver issues its queries as HTTP
+// fetch() calls under the hood, and without this, responses were observed being served from a
+// stale cache within a warm serverless instance: repeated INSERT/PUT calls committed real rows
+// (confirmed via RETURNING *, real incrementing ids), yet subsequent SELECTs on the same
+// container kept returning the same stale result set indefinitely, never seeing the new rows.
+// This explains both the earlier "admin bookings only shows 1 row" bug and the "most recently
+// written site_content row is missing" bug — both are the same root cause, not the bound-
+// parameter issue they were first (incorrectly) attributed to.
+export const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || '', {
+  fetchOptions: { cache: 'no-store' },
+});
 
 let schemaEnsured = false;
 
