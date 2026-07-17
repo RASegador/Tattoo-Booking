@@ -1,5 +1,6 @@
 import Hero from '@/components/Hero';
 import About from '@/components/About';
+import Artists from '@/components/Artists';
 import PortfolioSection from '@/components/portfolio/PortfolioSection';
 import Reviews from '@/components/Reviews';
 import Faq from '@/components/Faq';
@@ -10,6 +11,7 @@ export default function Home() {
     <>
       <Hero />
       <About />
+      <Artists />
       <PortfolioSection />
       <Reviews />
       <Faq />

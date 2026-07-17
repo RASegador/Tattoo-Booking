@@ -122,6 +122,34 @@ export async function ensureSchema(): Promise<void> {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS artists (
+      id serial PRIMARY KEY,
+      slug text UNIQUE NOT NULL,
+      name text NOT NULL,
+      bio text,
+      photo_data text,
+      specialties jsonb DEFAULT '[]',
+      years_experience int,
+      instagram_url text,
+      facebook_url text,
+      tiktok_url text,
+      available boolean DEFAULT true,
+      availability_note text,
+      active boolean DEFAULT true,
+      sort_order int DEFAULT 0,
+      created_at timestamptz DEFAULT now()
+    )
+  `;
+
+  // Additive column migrations — existing production tables predate these columns.
+  await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS artist_id int REFERENCES artists(id) ON DELETE SET NULL`;
+  await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS artist_name text`;
+  await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS price_min numeric`;
+  await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS price_max numeric`;
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_id int REFERENCES artists(id) ON DELETE SET NULL`;
+  await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_name text`;
+
   await seedIfEmpty();
 
   schemaEnsured = true;
@@ -139,6 +167,27 @@ async function seedIfEmpty(): Promise<void> {
         ON CONFLICT (day_of_week) DO NOTHING
       `;
     }
+  }
+
+  // artists
+  const artistCount = await sql`SELECT count(*)::int AS c FROM artists`;
+  if (Number(artistCount[0]?.c ?? 0) === 0) {
+    await sql`
+      INSERT INTO artists (slug, name, bio, photo_data, specialties, years_experience, instagram_url, active, available, sort_order)
+      VALUES (
+        'ralph-anthony-segador',
+        'Ralph Anthony Segador',
+        'Founder and lead artist of Obsidian Ink Studio, trained across traditional Japanese, American, and European studios before opening a modern, gallery-grade studio in Camarines Norte.',
+        '/ralph-portrait.jpg',
+        ${JSON.stringify(['Realism', 'Black & Grey', 'Fine Line', 'Traditional'])}::jsonb,
+        14,
+        '',
+        true,
+        true,
+        0
+      )
+      ON CONFLICT (slug) DO NOTHING
+    `;
   }
 
   // gallery_categories + artworks

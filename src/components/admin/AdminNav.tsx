@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: '/admin/bookings', label: 'Bookings', icon: '📅' },
   { href: '/admin/schedule', label: 'Schedule', icon: '🕐' },
   { href: '/admin/gallery', label: 'Gallery', icon: '🖼' },
+  { href: '/admin/artists', label: 'Artists', icon: '🧑‍🎨' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '★' },
   { href: '/admin/content', label: 'Content', icon: '✎' },
   { href: '/admin/activity', label: 'Activity Log', icon: '≡' },
