@@ -2,6 +2,7 @@
 # Run this from the ROOT of your local Tattoo-Booking repo clone (where package.json lives).
 $ErrorActionPreference = "Stop"
 Write-Host "Applying email + chatbot patch..." -ForegroundColor Cyan
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
 
 New-Item -ItemType Directory -Force -Path "src\app" | Out-Null
 New-Item -ItemType Directory -Force -Path "src\app\api\admin\bookings\[id]" | Out-Null
@@ -366,7 +367,7 @@ export async function sendAdminDailySummaryEmail(stats: DailySummaryStats): Prom
   }
 }
 '@
-Set-Content -LiteralPath "src\lib\email.ts" -Value $content_0 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\lib\email.ts"), $content_0, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/api/cron/reminders/route.ts" -ForegroundColor DarkGray
 $content_1 = @'
@@ -406,7 +407,7 @@ export async function GET(req: NextRequest) {
   }
 }
 '@
-Set-Content -LiteralPath "src\app\api\cron\reminders\route.ts" -Value $content_1 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\api\cron\reminders\route.ts"), $content_1, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/api/cron/daily-summary/route.ts" -ForegroundColor DarkGray
 $content_2 = @'
@@ -460,7 +461,7 @@ export async function GET(req: NextRequest) {
   }
 }
 '@
-Set-Content -LiteralPath "src\app\api\cron\daily-summary\route.ts" -Value $content_2 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\api\cron\daily-summary\route.ts"), $content_2, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/api/chat/route.ts" -ForegroundColor DarkGray
 $content_3 = @'
@@ -583,7 +584,7 @@ export async function POST(req: NextRequest) {
   }
 }
 '@
-Set-Content -LiteralPath "src\app\api\chat\route.ts" -Value $content_3 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\api\chat\route.ts"), $content_3, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/components/ChatWidget.tsx" -ForegroundColor DarkGray
 $content_4 = @'
@@ -883,7 +884,7 @@ export default function ChatWidget() {
   );
 }
 '@
-Set-Content -LiteralPath "src\components\ChatWidget.tsx" -Value $content_4 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\components\ChatWidget.tsx"), $content_4, $Utf8NoBomEncoding)
 
 Write-Host "  writing vercel.json" -ForegroundColor DarkGray
 $content_5 = @'
@@ -894,7 +895,7 @@ $content_5 = @'
   ]
 }
 '@
-Set-Content -LiteralPath "vercel.json" -Value $content_5 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "vercel.json"), $content_5, $Utf8NoBomEncoding)
 
 Write-Host "  writing package.json" -ForegroundColor DarkGray
 $content_6 = @'
@@ -931,7 +932,7 @@ $content_6 = @'
   }
 }
 '@
-Set-Content -LiteralPath "package.json" -Value $content_6 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "package.json"), $content_6, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/api/bookings/route.ts" -ForegroundColor DarkGray
 $content_7 = @'
@@ -1010,7 +1011,7 @@ export async function GET() {
   }
 }
 '@
-Set-Content -LiteralPath "src\app\api\bookings\route.ts" -Value $content_7 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\api\bookings\route.ts"), $content_7, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/api/admin/bookings/[id]/route.ts" -ForegroundColor DarkGray
 $content_8 = @'
@@ -1131,7 +1132,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   return NextResponse.json({ booking: updated[0] });
 }
 '@
-Set-Content -LiteralPath "src\app\api\admin\bookings\[id]\route.ts" -Value $content_8 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\api\admin\bookings\[id]\route.ts"), $content_8, $Utf8NoBomEncoding)
 
 Write-Host "  writing src/app/layout.tsx" -ForegroundColor DarkGray
 $content_9 = @'
@@ -1185,7 +1186,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 '@
-Set-Content -LiteralPath "src\app\layout.tsx" -Value $content_9 -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) "src\app\layout.tsx"), $content_9, $Utf8NoBomEncoding)
 
 Write-Host "All 10 files written successfully." -ForegroundColor Green
 Write-Host ""

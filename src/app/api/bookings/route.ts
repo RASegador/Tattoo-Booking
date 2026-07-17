@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { generateBookingId } from '@/lib/bookings';
 import { sendBookingConfirmationEmail, sendAdminNewBookingAlert } from '@/lib/email';
