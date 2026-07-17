@@ -54,8 +54,13 @@ export async function POST(req: NextRequest) {
     await logActivity(null, 'booking.created', `New booking ${bookingCode} from ${body.fullName}`);
 
     const createdBooking = rows[0];
-    sendBookingConfirmationEmail(createdBooking).catch(() => {});
-    sendAdminNewBookingAlert(createdBooking).catch(() => {});
+    // Awaited (not fire-and-forget): Vercel serverless functions can freeze
+    // the execution environment immediately after the response is sent,
+    // which kills any in-flight un-awaited promises before they complete.
+    await Promise.allSettled([
+      sendBookingConfirmationEmail(createdBooking),
+      sendAdminNewBookingAlert(createdBooking),
+    ]);
 
     return NextResponse.json({ ok: true, booking: rows[0] }, { status: 201 });
   } catch (err) {

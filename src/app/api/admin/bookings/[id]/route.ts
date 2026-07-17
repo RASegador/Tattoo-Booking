@@ -75,18 +75,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const updatedBooking = updated[0];
   const statusChanged = Boolean(body.status) && body.status !== existing.status;
 
+  // Awaited (not fire-and-forget): Vercel serverless functions can freeze
+  // the execution environment immediately after the response is sent,
+  // which kills any in-flight un-awaited promises before they complete.
   if (statusChanged && body.status === 'Confirmed') {
-    sendBookingApprovedEmail(updatedBooking).catch(() => {});
+    await sendBookingApprovedEmail(updatedBooking).catch(() => {});
   } else if (statusChanged && body.status === 'Cancelled') {
-    sendBookingRejectedEmail(updatedBooking, updatedBooking?.admin_notes || undefined).catch(() => {});
+    await sendBookingRejectedEmail(updatedBooking, updatedBooking?.admin_notes || undefined).catch(() => {});
   } else if (statusChanged && body.status === 'Completed') {
-    sendReviewRequestEmail(updatedBooking).catch(() => {});
+    await sendReviewRequestEmail(updatedBooking).catch(() => {});
   }
 
   const dateChanged = Boolean(body.date) && body.date !== existing.date;
   const timeChanged = Boolean(body.time) && body.time !== existing.time;
   if (!statusChanged && (dateChanged || timeChanged)) {
-    sendBookingRescheduledEmail(updatedBooking, existing.date, existing.time).catch(() => {});
+    await sendBookingRescheduledEmail(updatedBooking, existing.date, existing.time).catch(() => {});
   }
 
   return NextResponse.json({ booking: updated[0] });
@@ -110,7 +113,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const session = await getSessionFromRequest(req);
   await logActivity(session?.email, 'booking.cancelled', `Booking #${id} cancelled`);
 
-  sendBookingCancelledEmail(updated[0]).catch(() => {});
+  // Awaited (not fire-and-forget) for the same reason as above.
+  await sendBookingCancelledEmail(updated[0]).catch(() => {});
 
   return NextResponse.json({ booking: updated[0] });
 }
