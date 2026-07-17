@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 function slugify(name: string): string {
   return name
     .toLowerCase()

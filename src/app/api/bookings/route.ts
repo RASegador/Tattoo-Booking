@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { generateBookingId } from '@/lib/bookings';
 
+export const dynamic = 'force-dynamic';
+
 type BookingRequestBody = {
   style?: string;
   size?: string;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   await ensureSchema();
   const hours = await sql`SELECT * FROM business_hours ORDER BY day_of_week ASC`;

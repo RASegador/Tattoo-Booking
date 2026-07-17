@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { hashPassword, signSession, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   await ensureSchema();
   try {

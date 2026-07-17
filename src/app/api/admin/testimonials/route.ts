@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   await ensureSchema();
   const testimonials = await sql`SELECT * FROM testimonials ORDER BY created_at DESC`;
