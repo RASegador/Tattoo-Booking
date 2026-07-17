@@ -15,6 +15,15 @@ export async function GET(req: NextRequest) {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
+  // Always keep at least one bound parameter. Empirically, calling this Neon driver as
+  // sql(queryText, params) with params === [] (i.e. no filters applied) silently returns
+  // only a single row instead of the full table — a real production bug that hid most
+  // bookings from the admin list whenever no status/date/search filter was active. Every
+  // branch below that already passes real params works correctly, so this harmless
+  // always-true bound condition keeps every call on that same working code path.
+  params.push(0);
+  conditions.push(`id >= $${params.length}`);
+
   if (status && status !== 'All') {
     params.push(status);
     conditions.push(`status = $${params.length}`);
