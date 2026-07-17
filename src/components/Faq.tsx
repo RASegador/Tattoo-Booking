@@ -1,11 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { faqs } from '@/lib/data';
+import { faqs as fallbackFaqs } from '@/lib/data';
 
 export default function Faq() {
   const [open, setOpen] = useState<number | null>(0);
+  const [faqs, setFaqs] = useState(fallbackFaqs);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/content');
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.faq) && data.faq.length > 0) {
+          setFaqs(data.faq);
+        }
+      } catch {
+        // keep fallback faqs on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section id="faq" className="relative py-32 px-6">

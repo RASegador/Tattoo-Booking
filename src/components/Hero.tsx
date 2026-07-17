@@ -1,9 +1,39 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function Hero() {
+  const [eyebrow, setEyebrow] = useState('Obsidian Ink Studio');
+  const [headlineLine1, setHeadlineLine1] = useState('Ink That Tells');
+  const [headlineLine2Gold, setHeadlineLine2Gold] = useState('Your Story');
+  const [subtext, setSubtext] = useState(
+    'A boutique tattoo studio where fine art meets skin. Every piece is custom-built, hand-drawn, and executed with obsessive precision — an immersive gallery experience, not just a tattoo shop.'
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/content');
+        const data = await res.json();
+        if (!cancelled && data?.hero) {
+          const hero = data.hero;
+          if (hero.eyebrow) setEyebrow(hero.eyebrow);
+          if (hero.headline_line1) setHeadlineLine1(hero.headline_line1);
+          if (hero.headline_line2_gold) setHeadlineLine2Gold(hero.headline_line2_gold);
+          if (hero.subtext) setSubtext(hero.subtext);
+        }
+      } catch {
+        // keep hardcoded defaults on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6">
       <div className="absolute inset-0 -z-10">
@@ -17,7 +47,7 @@ export default function Hero() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="text-xs md:text-sm tracking-[0.5em] uppercase text-gold/80 mb-6"
         >
-          Obsidian Ink Studio
+          {eyebrow}
         </motion.p>
 
         <motion.h1
@@ -26,9 +56,9 @@ export default function Hero() {
           transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
           className="font-display text-5xl sm:text-6xl md:text-8xl leading-[1.05] tracking-tight"
         >
-          Ink That Tells
+          {headlineLine1}
           <br />
-          <span className="text-gradient-gold">Your Story</span>
+          <span className="text-gradient-gold">{headlineLine2Gold}</span>
         </motion.h1>
 
         <motion.p
@@ -37,9 +67,7 @@ export default function Hero() {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="mt-8 text-base md:text-lg text-white/60 max-w-xl mx-auto leading-relaxed"
         >
-          A boutique tattoo studio where fine art meets skin. Every piece is custom-built,
-          hand-drawn, and executed with obsessive precision — an immersive gallery experience,
-          not just a tattoo shop.
+          {subtext}
         </motion.p>
 
         <motion.div

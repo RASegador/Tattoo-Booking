@@ -1,13 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { categories } from '@/lib/data';
+import { categories as fallbackCategories, type Category } from '@/lib/data';
 import FolderCard from './FolderCard';
 import GalleryModal from './GalleryModal';
 
 export default function PortfolioSection() {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>(fallbackCategories);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/gallery');
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
+        }
+      } catch {
+        // keep fallback categories on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section id="portfolio" className="relative py-32 px-6">
@@ -37,7 +56,9 @@ export default function PortfolioSection() {
       </div>
 
       <AnimatePresence>
-        {openCategory && <GalleryModal slug={openCategory} onClose={() => setOpenCategory(null)} />}
+        {openCategory && (
+          <GalleryModal slug={openCategory} categories={categories} onClose={() => setOpenCategory(null)} />
+        )}
       </AnimatePresence>
     </section>
   );

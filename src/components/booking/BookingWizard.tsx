@@ -114,6 +114,60 @@ export default function BookingWizard() {
 
   const submitBooking = async () => {
     setSubmitting(true);
+
+    const estimatedDuration = form.size === 'Full Sleeve' ? '6-10 hrs (multi-session)' : '2-5 hrs';
+    const requestBody = {
+      style: form.style,
+      size: form.size,
+      placement: form.placement,
+      referenceImageNames: form.referenceFiles.map((f) => f.name),
+      description: form.description,
+      date: form.date!,
+      time: form.time!,
+      fullName: form.fullName,
+      mobile: form.mobile,
+      email: form.email,
+      notes: form.notes,
+      estimatedDuration,
+    };
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      const json = await res.json();
+
+      if (res.ok && json?.booking) {
+        const b = json.booking;
+        const mapped: Booking = {
+          id: b.booking_code,
+          style: b.style,
+          size: b.size,
+          placement: b.placement,
+          referenceImageNames: b.reference_image_names ?? requestBody.referenceImageNames,
+          description: b.description,
+          date: b.date,
+          time: b.time,
+          fullName: b.full_name,
+          mobile: b.mobile,
+          email: b.email,
+          notes: b.notes,
+          status: b.status ?? 'Pending',
+          createdAt: b.created_at,
+          estimatedDuration: b.estimated_duration ?? estimatedDuration,
+        };
+        saveBooking(mapped);
+        setSubmitting(false);
+        setSubmitted(mapped);
+        return;
+      }
+    } catch {
+      // fall through to local-only fallback below
+    }
+
+    // Fallback: server failed or returned an error — keep the wizard working locally.
     const booking: Booking = {
       id: generateBookingId(),
       style: form.style,
@@ -129,19 +183,8 @@ export default function BookingWizard() {
       notes: form.notes,
       status: 'Pending',
       createdAt: new Date().toISOString(),
-      estimatedDuration: form.size === 'Full Sleeve' ? '6-10 hrs (multi-session)' : '2-5 hrs',
+      estimatedDuration,
     };
-
-    try {
-      await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(booking),
-      });
-    } catch {
-      // non-blocking — local persistence is the source of truth for this demo
-    }
-
     saveBooking(booking);
     setSubmitting(false);
     setSubmitted(booking);

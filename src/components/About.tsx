@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
@@ -18,6 +19,45 @@ const fadeUp = {
 };
 
 export default function About() {
+  const [eyebrow, setEyebrow] = useState('The Studio');
+  const [headingPlain, setHeadingPlain] = useState('Where Fine Art Meets');
+  const [headingGold, setHeadingGold] = useState('Permanent Craft');
+  const [artistLine, setArtistLine] = useState('Ralph Anthony Segador — Founder & Lead Artist');
+  const [bio1, setBio1] = useState(
+    'Obsidian Ink Studio was founded on a simple belief — a tattoo should be treated as fine art, not a transaction. Every client begins with a private consultation where we translate your story, memory, or vision into a piece built exclusively for your skin.'
+  );
+  const [bio2, setBio2] = useState(
+    'Lead artist Ralph Anthony Segador trained across traditional Japanese, American, and European studios before opening Obsidian Ink, blending decades of technique with a modern, gallery-grade studio environment — hospital-level sterilization, premium pigments, and an atmosphere designed to feel more like an art residency than a shop.'
+  );
+  const [philosophyQuote, setPhilosophyQuote] = useState(
+    '"A tattoo is not decoration. It is a permanent conversation between memory, identity, and skin — and every conversation deserves an artist who listens first."'
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/content');
+        const data = await res.json();
+        if (!cancelled && data?.about) {
+          const about = data.about;
+          if (about.eyebrow) setEyebrow(about.eyebrow);
+          if (about.heading_plain) setHeadingPlain(about.heading_plain);
+          if (about.heading_gold) setHeadingGold(about.heading_gold);
+          if (about.artist_line) setArtistLine(about.artist_line);
+          if (about.bio1) setBio1(about.bio1);
+          if (about.bio2) setBio2(about.bio2);
+          if (about.philosophy_quote) setPhilosophyQuote(about.philosophy_quote);
+        }
+      } catch {
+        // keep hardcoded defaults on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section id="about" className="relative py-32 px-6">
       <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-16 items-center">
@@ -30,11 +70,12 @@ export default function About() {
         >
           <div className="relative aspect-[4/5] rounded-2xl overflow-hidden grain">
             <Image
-              src="https://picsum.photos/seed/tattoo-artist-portrait/900/1100"
-              alt="Studio artist at work"
+              src="/ralph-portrait.jpg"
+              alt="Ralph Anthony Segador, founder and lead artist"
               fill
-              className="object-cover grayscale contrast-125"
+              className="object-cover contrast-110"
               sizes="(max-width: 768px) 100vw, 50vw"
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink-black via-transparent to-transparent" />
           </div>
@@ -45,20 +86,18 @@ export default function About() {
         </motion.div>
 
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
-          <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4 section-heading">The Studio</p>
-          <h2 className="font-display text-4xl md:text-5xl leading-tight mb-6">
-            Where Fine Art Meets <span className="text-gradient-gold">Permanent Craft</span>
+          <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4 section-heading">{eyebrow}</p>
+          <h2 className="font-display text-4xl md:text-5xl leading-tight mb-3">
+            {headingPlain} <span className="text-gradient-gold">{headingGold}</span>
           </h2>
+          <p className="text-sm tracking-[0.2em] uppercase text-white/40 mb-6">
+            {artistLine}
+          </p>
           <p className="text-white/60 leading-relaxed mb-6">
-            Obsidian Ink Studio was founded on a simple belief — a tattoo should be treated as
-            fine art, not a transaction. Every client begins with a private consultation where we
-            translate your story, memory, or vision into a piece built exclusively for your skin.
+            {bio1}
           </p>
           <p className="text-white/60 leading-relaxed mb-10">
-            Our lead artist trained across traditional Japanese, American, and European studios
-            before opening Obsidian Ink, blending decades of technique with a modern, gallery-grade
-            studio environment — hospital-level sterilization, premium pigments, and an atmosphere
-            designed to feel more like an art residency than a shop.
+            {bio2}
           </p>
 
           <div className="grid grid-cols-2 gap-6 mb-10">
@@ -92,9 +131,7 @@ export default function About() {
       >
         <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4">Our Philosophy</p>
         <p className="font-display text-2xl md:text-3xl leading-relaxed text-white/90">
-          &ldquo;A tattoo is not decoration. It is a permanent conversation between memory,
-          identity, and skin — and every conversation deserves an artist who listens
-          first.&rdquo;
+          {philosophyQuote}
         </p>
       </motion.div>
     </section>

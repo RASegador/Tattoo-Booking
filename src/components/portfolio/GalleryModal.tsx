@@ -1,15 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { categories, getArtworksForCategory } from '@/lib/data';
+import type { Category } from '@/lib/data';
 import ArtworkViewer from './ArtworkViewer';
 
-export default function GalleryModal({ slug, onClose }: { slug: string; onClose: () => void }) {
+export type GalleryArtwork = {
+  id: number;
+  category_slug: string;
+  title: string;
+  image_data: string;
+  placement: string;
+  size: string;
+  duration: string;
+  price: string;
+  description: string;
+  featured?: boolean;
+  created_at?: string;
+};
+
+function isDataUrl(src: string) {
+  return src.startsWith('data:');
+}
+
+export default function GalleryModal({
+  slug,
+  categories,
+  onClose,
+}: {
+  slug: string;
+  categories: Category[];
+  onClose: () => void;
+}) {
   const category = categories.find((c) => c.slug === slug);
-  const artworks = getArtworksForCategory(slug);
+  const [artworks, setArtworks] = useState<GalleryArtwork[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/public/gallery/${slug}`);
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.artworks)) {
+          setArtworks(data.artworks);
+        }
+      } catch {
+        if (!cancelled) setArtworks([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   return (
     <motion.div
@@ -40,34 +88,51 @@ export default function GalleryModal({ slug, onClose }: { slug: string; onClose:
           </button>
         </div>
 
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:_balance]">
-          {artworks.map((art, i) => (
-            <motion.button
-              key={art.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
-              onClick={() => setViewerIndex(i)}
-              data-cursor-hover
-              className="group relative mb-5 w-full break-inside-avoid rounded-xl overflow-hidden block text-left"
-            >
-              <div className="relative w-full" style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '1/1' : '4/5' }}>
-                <Image
-                  src={`https://picsum.photos/seed/${art.seed}/700/900`}
-                  alt={art.title}
-                  fill
-                  className="object-cover grayscale contrast-125 group-hover:scale-110 group-hover:grayscale-0 transition-all duration-700"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                  <p className="text-sm font-display text-white">{art.title}</p>
-                  <p className="text-xs text-gold/80 mt-1">{art.placement} · {art.duration}</p>
+        {loading && artworks.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl overflow-hidden bg-white/5 animate-pulse aspect-[4/5]" />
+            ))}
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:_balance]">
+            {artworks.map((art, i) => (
+              <motion.button
+                key={String(art.id)}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
+                onClick={() => setViewerIndex(i)}
+                data-cursor-hover
+                className="group relative mb-5 w-full break-inside-avoid rounded-xl overflow-hidden block text-left"
+              >
+                <div className="relative w-full" style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '1/1' : '4/5' }}>
+                  {isDataUrl(art.image_data) ? (
+                    <img
+                      src={art.image_data}
+                      alt={art.title}
+                      className="absolute inset-0 w-full h-full object-cover grayscale contrast-125 group-hover:scale-110 group-hover:grayscale-0 transition-all duration-700"
+                      style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    />
+                  ) : (
+                    <Image
+                      src={art.image_data}
+                      alt={art.title}
+                      fill
+                      className="object-cover grayscale contrast-125 group-hover:scale-110 group-hover:grayscale-0 transition-all duration-700"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                    <p className="text-sm font-display text-white">{art.title}</p>
+                    <p className="text-xs text-gold/80 mt-1">{art.placement} · {art.duration}</p>
+                  </div>
                 </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
+              </motion.button>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence>

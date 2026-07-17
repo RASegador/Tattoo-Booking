@@ -1,7 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { isFullyBooked } from '@/lib/bookings';
+import { useEffect, useMemo, useState } from 'react';
+
+type BusinessHour = {
+  id: number;
+  day_of_week: number;
+  open_time: string;
+  close_time: string;
+  is_closed: boolean;
+};
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -22,6 +29,34 @@ export default function Calendar({
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/availability');
+        const data = await res.json();
+        if (!cancelled) {
+          if (Array.isArray(data?.businessHours)) setBusinessHours(data.businessHours);
+          if (Array.isArray(data?.blockedDates)) setBlockedDates(data.blockedDates);
+        }
+      } catch {
+        // keep permissive defaults (nothing closed) on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isUnavailable = (dateStr: string, dateObj: Date) => {
+    if (blockedDates.includes(dateStr)) return true;
+    const dow = dateObj.getDay();
+    const rule = businessHours.find((h) => h.day_of_week === dow);
+    return !!rule?.is_closed;
+  };
 
   const days = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1).getDay();
@@ -58,7 +93,7 @@ export default function Calendar({
           const dateStr = toDateStr(viewYear, viewMonth, d);
           const dateObj = new Date(viewYear, viewMonth, d);
           const isPast = dateObj < startOfToday;
-          const fullyBooked = isFullyBooked(dateStr);
+          const fullyBooked = isUnavailable(dateStr, dateObj);
           const isSelected = selected === dateStr;
           const disabled = isPast || fullyBooked;
           return (

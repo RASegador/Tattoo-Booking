@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { Artwork } from '@/lib/data';
+import type { GalleryArtwork } from './GalleryModal';
+
+function isDataUrl(src: string) {
+  return src.startsWith('data:');
+}
 
 export default function ArtworkViewer({
   artworks,
@@ -11,12 +15,12 @@ export default function ArtworkViewer({
   onClose,
   onNavigate,
 }: {
-  artworks: Artwork[];
+  artworks: GalleryArtwork[];
   index: number;
   onClose: () => void;
   onNavigate: (i: number) => void;
 }) {
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [liked, setLiked] = useState<Record<number, boolean>>({});
   const [zoomed, setZoomed] = useState(false);
   const artwork = artworks[index];
 
@@ -82,13 +86,22 @@ export default function ArtworkViewer({
               transition={{ duration: 0.4 }}
               className="absolute inset-0"
             >
-              <Image
-                src={`https://picsum.photos/seed/${artwork.seed}/1000/1250`}
-                alt={artwork.title}
-                fill
-                className="object-cover grayscale contrast-125"
-                sizes="60vw"
-              />
+              {isDataUrl(artwork.image_data) ? (
+                <img
+                  src={artwork.image_data}
+                  alt={artwork.title}
+                  className="absolute inset-0 w-full h-full object-cover grayscale contrast-125"
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                />
+              ) : (
+                <Image
+                  src={artwork.image_data}
+                  alt={artwork.title}
+                  fill
+                  className="object-cover grayscale contrast-125"
+                  sizes="60vw"
+                />
+              )}
             </motion.div>
             <div className="absolute bottom-3 right-3 text-[10px] tracking-widest uppercase text-white/50 bg-black/50 px-2 py-1 rounded">
               {zoomed ? 'Click to reset' : 'Click to zoom'}
@@ -108,10 +121,6 @@ export default function ArtworkViewer({
           </p>
           <h3 className="font-display text-2xl mb-4">{artwork.title}</h3>
           <dl className="grid grid-cols-2 gap-4 text-sm mb-6">
-            <div>
-              <dt className="text-white/40 text-xs uppercase tracking-wide">Style</dt>
-              <dd className="text-white/80 mt-1">{artwork.style}</dd>
-            </div>
             <div>
               <dt className="text-white/40 text-xs uppercase tracking-wide">Placement</dt>
               <dd className="text-white/80 mt-1">{artwork.placement}</dd>

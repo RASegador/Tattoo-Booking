@@ -1,11 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function Contact() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState('San Vicente, Camarines Norte, Philippines');
+  const [phone, setPhone] = useState('0994 147 5924');
+  const [email, setEmail] = useState('ralph.segador03@gmail.com');
+  const [hours, setHours] = useState('Tue – Sun, 11:00 AM – 8:00 PM · Closed Mondays');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/content');
+        const data = await res.json();
+        if (!cancelled && data?.contact) {
+          const contact = data.contact;
+          if (contact.address) setAddress(contact.address);
+          if (contact.phone) setPhone(contact.phone);
+          if (contact.email) setEmail(contact.email);
+          if (contact.hours) setHours(contact.hours);
+        }
+      } catch {
+        // keep hardcoded defaults on failure
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,20 +58,20 @@ export default function Contact() {
 
           <div className="space-y-5 mb-10 text-sm text-white/70">
             <p><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Address</span>
-              128 Ashford Lane, Arts District, Manila, PH</p>
+              {address}</p>
             <p><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Phone</span>
-              +63 917 000 1234</p>
+              {phone}</p>
             <p><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Email</span>
-              hello@obsidianink.studio</p>
+              {email}</p>
             <p><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Business Hours</span>
-              Tue – Sun, 11:00 AM – 8:00 PM · Closed Mondays</p>
+              {hours}</p>
           </div>
 
           <div className="rounded-xl overflow-hidden border border-white/10 h-64">
             <iframe
               title="Studio location map"
               className="w-full h-full grayscale contrast-125 invert-[0.92]"
-              src="https://www.google.com/maps?q=Manila,Philippines&output=embed"
+              src="https://www.google.com/maps?q=San+Vicente,+Camarines+Norte,+Philippines&output=embed"
               loading="lazy"
             />
           </div>

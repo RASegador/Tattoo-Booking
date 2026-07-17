@@ -1,27 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ensureSchema, sql, logActivity } from '@/lib/db';
+import { generateBookingId } from '@/lib/bookings';
 
-// Demo in-memory store. Serverless instances are ephemeral and stateless,
-// so this only persists for the lifetime of a single warm function instance.
-// The booking wizard also writes to localStorage, which is the durable
-// source of truth for this demo. Swap this file for a real database
-// (Supabase/Firebase/Postgres) adapter to persist bookings server-side.
-type StoredBooking = Record<string, unknown> & { id: string; createdAt: string };
-const memoryStore: StoredBooking[] = [];
+type BookingRequestBody = {
+  style?: string;
+  size?: string;
+  placement?: string;
+  referenceImageNames?: string[];
+  description?: string;
+  date?: string;
+  time?: string;
+  fullName?: string;
+  mobile?: string;
+  email?: string;
+  notes?: string;
+  estimatedDuration?: string;
+};
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as StoredBooking;
-    if (!body?.id) {
-      return NextResponse.json({ error: 'Missing booking id' }, { status: 400 });
+    await ensureSchema();
+
+    let body: BookingRequestBody;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
-    memoryStore.unshift(body);
-    // Simulate email confirmation dispatch
-    return NextResponse.json({ ok: true, booking: body }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+
+    if (!body.fullName || !body.mobile || !body.date || !body.time) {
+      return NextResponse.json({ error: 'Missing required booking fields' }, { status: 400 });
+    }
+
+    const bookingCode = generateBookingId();
+
+    const rows = await sql`
+      INSERT INTO bookings (
+        booking_code, style, size, placement, reference_image_names, description,
+        date, time, full_name, mobile, email, notes, status, estimated_duration
+      )
+      VALUES (
+        ${bookingCode}, ${body.style ?? ''}, ${body.size ?? ''}, ${body.placement ?? ''},
+        ${JSON.stringify(body.referenceImageNames ?? [])}::jsonb, ${body.description ?? ''},
+        ${body.date}, ${body.time}, ${body.fullName}, ${body.mobile}, ${body.email ?? ''},
+        ${body.notes ?? ''}, 'Pending', ${body.estimatedDuration ?? ''}
+      )
+      RETURNING *
+    `;
+
+    await logActivity(null, 'booking.created', `New booking ${bookingCode} from ${body.fullName}`);
+
+    return NextResponse.json({ ok: true, booking: rows[0] }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to create booking', detail: String(err) }, { status: 500 });
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ bookings: memoryStore });
+  try {
+    await ensureSchema();
+    const bookings = await sql`SELECT * FROM bookings ORDER BY created_at DESC`;
+    return NextResponse.json({ bookings });
+  } catch {
+    return NextResponse.json({ bookings: [] });
+  }
 }

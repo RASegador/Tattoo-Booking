@@ -1,10 +1,48 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Booking, BookingStatus, getBookings, updateBookingStatus } from '@/lib/bookings';
 
-const STATUS_COLORS: Record<BookingStatus, string> = {
+type StatusCounts = {
+  Pending: number;
+  Confirmed: number;
+  Completed: number;
+  Cancelled: number;
+  Rescheduled: number;
+};
+
+type TodayBooking = {
+  id: string;
+  booking_code: string;
+  style: string;
+  size: string;
+  placement: string;
+  date: string;
+  time: string;
+  full_name: string;
+  mobile: string;
+  status: string;
+};
+
+type ActivityEntry = {
+  id: string;
+  admin_email: string;
+  action: string;
+  details: string;
+  created_at: string;
+};
+
+type DashboardData = {
+  totalBookings: number;
+  statusCounts: StatusCounts;
+  bookingsNext7Days: number;
+  totalArtworks: number;
+  totalTestimonials: number;
+  approvedTestimonials: number;
+  recentActivity: ActivityEntry[];
+  todayBookings: TodayBooking[];
+};
+
+const STATUS_COLORS: Record<string, string> = {
   Pending: 'text-gold border-gold/40 bg-gold/10',
   Confirmed: 'text-cyan border-cyan/40 bg-cyan/10',
   Completed: 'text-white/70 border-white/30 bg-white/10',
@@ -12,98 +50,138 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   Rescheduled: 'text-white border-white/40 bg-white/10',
 };
 
-export default function AdminPage() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [mounted, setMounted] = useState(false);
+export default function AdminDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    setBookings(getBookings());
-    setMounted(true);
+    let cancelled = false;
+    fetch('/api/admin/dashboard', { credentials: 'include' })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load dashboard');
+        return res.json();
+      })
+      .then((json: DashboardData) => {
+        if (!cancelled) {
+          setData(json);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError('Could not load dashboard data.');
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const refresh = () => setBookings(getBookings());
-
-  const setStatus = (id: string, status: BookingStatus) => {
-    updateBookingStatus(id, status);
-    refresh();
-  };
-
-  const stats = {
-    total: bookings.length,
-    pending: bookings.filter((b) => b.status === 'Pending').length,
-    confirmed: bookings.filter((b) => b.status === 'Confirmed').length,
-    completed: bookings.filter((b) => b.status === 'Completed').length,
-  };
+  const stats = data
+    ? [
+        { label: 'Total Bookings', value: data.totalBookings },
+        { label: 'Pending', value: data.statusCounts?.Pending ?? 0 },
+        { label: 'Confirmed', value: data.statusCounts?.Confirmed ?? 0 },
+        { label: 'This Week', value: data.bookingsNext7Days },
+        { label: 'Gallery Items', value: data.totalArtworks },
+        { label: 'Testimonials', value: `${data.approvedTestimonials}/${data.totalTestimonials}` },
+      ]
+    : [];
 
   return (
-    <section className="relative min-h-screen pt-40 pb-24 px-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-12">
-          <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4">Studio Admin</p>
-          <h1 className="font-display text-4xl md:text-5xl">
-            Booking <span className="text-gradient-gold">Requests</span>
-          </h1>
-          <p className="text-white/50 mt-4 max-w-2xl text-sm">
-            This demo view reads booking requests stored in this browser. Connect a database
-            (Supabase/Firebase) to persist bookings across devices and power a full admin dashboard.
-          </p>
-        </div>
+    <section className="relative pb-10">
+      <div className="mb-10">
+        <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4">Studio Admin</p>
+        <h1 className="font-display text-4xl md:text-5xl">
+          Dashboard <span className="text-gradient-gold">Overview</span>
+        </h1>
+      </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          {[
-            { label: 'Total Bookings', value: stats.total },
-            { label: 'Pending', value: stats.pending },
-            { label: 'Confirmed', value: stats.confirmed },
-            { label: 'Completed', value: stats.completed },
-          ].map((s) => (
-            <div key={s.label} className="glass-panel rounded-xl p-5 border border-white/10">
-              <p className="font-display text-3xl text-gradient-gold">{s.value}</p>
-              <p className="text-[10px] uppercase tracking-wide text-white/40 mt-1">{s.label}</p>
-            </div>
-          ))}
+      {error && (
+        <div className="glass-panel rounded-xl p-6 border border-crimson/30 text-crimson-light text-sm mb-8">
+          {error}
         </div>
+      )}
 
-        {!mounted ? null : bookings.length === 0 ? (
-          <div className="glass-panel rounded-xl p-16 text-center border border-white/10">
-            <p className="text-white/50">No bookings yet. Submit a request from the booking page to see it appear here.</p>
-            <a href="/booking" className="inline-block mt-6 px-6 py-3 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-wide transition-colors" data-cursor-hover>
-              Book Now
-            </a>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {bookings.map((b, i) => (
-              <motion.div
-                key={b.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.4 }}
-                className="glass-panel rounded-xl p-6 border border-white/10 grid md:grid-cols-[1fr_auto] gap-4"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <span className="font-mono text-xs text-gold">{b.id}</span>
-                    <span className={`text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border ${STATUS_COLORS[b.status]}`}>
-                      {b.status}
-                    </span>
-                  </div>
-                  <p className="font-display text-lg">{b.fullName} — {b.style}</p>
-                  <p className="text-sm text-white/50 mt-1">
-                    {b.placement} · {b.size} · {b.date} at {b.time}
-                  </p>
-                  <p className="text-xs text-white/40 mt-2">{b.mobile}{b.email ? ` · ${b.email}` : ''}</p>
-                </div>
-                <div className="flex flex-wrap items-start gap-2 md:justify-end">
-                  <button onClick={() => setStatus(b.id, 'Confirmed')} data-cursor-hover className="px-3 py-2 text-xs uppercase border border-white/15 hover:border-cyan hover:text-cyan rounded-lg transition-colors">Confirm</button>
-                  <button onClick={() => setStatus(b.id, 'Completed')} data-cursor-hover className="px-3 py-2 text-xs uppercase border border-white/15 hover:border-white/50 rounded-lg transition-colors">Complete</button>
-                  <button onClick={() => setStatus(b.id, 'Rescheduled')} data-cursor-hover className="px-3 py-2 text-xs uppercase border border-white/15 hover:border-gold hover:text-gold rounded-lg transition-colors">Reschedule</button>
-                  <button onClick={() => setStatus(b.id, 'Cancelled')} data-cursor-hover className="px-3 py-2 text-xs uppercase border border-white/15 hover:border-crimson hover:text-crimson rounded-lg transition-colors">Cancel</button>
-                </div>
-              </motion.div>
+      {loading ? (
+        <div className="glass-panel rounded-xl p-16 text-center border border-white/10">
+          <p className="text-white/40 text-sm uppercase tracking-wide">Loading dashboard...</p>
+        </div>
+      ) : data ? (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
+            {stats.map((s) => (
+              <div key={s.label} className="glass-panel rounded-xl p-5 border border-white/10">
+                <p className="font-display text-3xl text-gradient-gold">{s.value}</p>
+                <p className="text-[10px] uppercase tracking-wide text-white/40 mt-1">{s.label}</p>
+              </div>
             ))}
           </div>
-        )}
-      </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            <div>
+              <h2 className="font-display text-xl mb-4">
+                Today&apos;s <span className="text-gradient-gold">Appointments</span>
+              </h2>
+              {data.todayBookings.length === 0 ? (
+                <div className="glass-panel rounded-xl p-8 text-center border border-white/10">
+                  <p className="text-white/40 text-sm">No appointments scheduled today.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {data.todayBookings.map((b) => (
+                    <div key={b.id} className="glass-panel rounded-xl p-4 border border-white/10">
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <span className="font-mono text-xs text-gold">{b.booking_code}</span>
+                        <span
+                          className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+                            STATUS_COLORS[b.status] || 'text-white/60 border-white/30 bg-white/10'
+                          }`}
+                        >
+                          {b.status}
+                        </span>
+                      </div>
+                      <p className="font-display text-base">{b.full_name} — {b.style}</p>
+                      <p className="text-xs text-white/50 mt-1">
+                        {b.placement} · {b.size} · {b.time}
+                      </p>
+                      <p className="text-xs text-white/40 mt-1">{b.mobile}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h2 className="font-display text-xl mb-4">
+                Recent <span className="text-gradient-gold">Activity</span>
+              </h2>
+              {data.recentActivity.length === 0 ? (
+                <div className="glass-panel rounded-xl p-8 text-center border border-white/10">
+                  <p className="text-white/40 text-sm">No recent activity.</p>
+                </div>
+              ) : (
+                <div className="glass-panel rounded-xl border border-white/10 divide-y divide-white/5">
+                  {data.recentActivity.map((a) => (
+                    <div key={a.id} className="p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-white/80">{a.action}</span>
+                        <span className="text-[10px] text-white/30">
+                          {new Date(a.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      {a.details && <p className="text-xs text-white/40 mt-1">{a.details}</p>}
+                      <p className="text-[10px] text-white/30 mt-1">{a.admin_email}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }
