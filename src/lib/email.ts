@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Obsidian Ink Studio <onboarding@resend.dev>';
 const ADMIN_NOTIFY_EMAIL = process.env.ADMIN_NOTIFY_EMAIL || 'ralph.segador03@gmail.com';
@@ -60,7 +67,7 @@ function wrapper(title: string, bodyHtml: string): string {
 function detailRow(label: string, value: string): string {
   return `<tr>
     <td style="padding:6px 0; color:rgba(255,255,255,0.45); font-size:12px; letter-spacing:1px; text-transform:uppercase; width:140px;">${label}</td>
-    <td style="padding:6px 0; color:#fff; font-size:14px;">${value || 'â€”'}</td>
+    <td style="padding:6px 0; color:#fff; font-size:14px;">${value || '—'}</td>
   </tr>`;
 }
 
@@ -95,10 +102,12 @@ export async function sendBookingConfirmationEmail(booking: BookingLike): Promis
       )}
       <p>We'll notify you by email as soon as your appointment is confirmed. If you have any questions in the meantime, feel free to reply to this email.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Booking Request Received â€” ${code(booking)}`,
+      subject: `Booking Request Received — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -115,7 +124,7 @@ export async function sendBookingApprovedEmail(booking: BookingLike): Promise<Em
     const html = wrapper(
       'Appointment Confirmed',
       `<p>Hi ${name(booking)},</p>
-      <p>Great news â€” your appointment is <strong style="color:#c9a24b;">confirmed</strong>. We look forward to creating something incredible with you.</p>
+      <p>Great news — your appointment is <strong style="color:#c9a24b;">confirmed</strong>. We look forward to creating something incredible with you.</p>
       ${detailsTable(
         detailRow('Booking Code', code(booking)) +
           detailRow('Date', booking.date || '') +
@@ -125,10 +134,12 @@ export async function sendBookingApprovedEmail(booking: BookingLike): Promise<Em
       )}
       <p>Reminder: a non-refundable deposit secures your slot and is deducted from your final price on the day of your session. Please arrive well-rested, hydrated, and having eaten a solid meal beforehand.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Your Appointment is Confirmed â€” ${code(booking)}`,
+      subject: `Your Appointment is Confirmed — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -149,12 +160,14 @@ export async function sendBookingRejectedEmail(booking: BookingLike, reason?: st
         booking
       )}) at this time.</p>
       ${reason ? `<p style="color:rgba(255,255,255,0.7); font-style:italic;">"${reason}"</p>` : ''}
-      <p>We'd love the opportunity to work with you â€” please feel free to submit a new booking request with an alternate date or details, and our team will be happy to help.</p>`
+      <p>We'd love the opportunity to work with you — please feel free to submit a new booking request with an alternate date or details, and our team will be happy to help.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `About Your Booking Request â€” ${code(booking)}`,
+      subject: `About Your Booking Request — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -184,10 +197,12 @@ export async function sendBookingRescheduledEmail(
       )}
       <p>If this new time doesn't work for you, please reply to this email or contact us directly and we'll help find another slot.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Appointment Rescheduled â€” ${code(booking)}`,
+      subject: `Appointment Rescheduled — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -209,10 +224,12 @@ export async function sendBookingCancelledEmail(booking: BookingLike): Promise<E
       } has been cancelled.</p>
       <p>If this was a mistake, or you'd like to book a new appointment, we'd be glad to see you at the studio again.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Booking Cancelled â€” ${code(booking)}`,
+      subject: `Booking Cancelled — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -238,10 +255,12 @@ export async function sendAppointmentReminderEmail(booking: BookingLike): Promis
       )}
       <p>Please get a full night's sleep, eat a solid meal beforehand, stay hydrated, and avoid alcohol for 24 hours prior. We can't wait to see you.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `See You Tomorrow â€” Your Appointment Reminder`,
+      subject: `See You Tomorrow — Your Appointment Reminder`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -259,11 +278,13 @@ export async function sendReviewRequestEmail(booking: BookingLike): Promise<Emai
       'Thank You',
       `<p>Hi ${name(booking)},</p>
       <p>Thank you for trusting Obsidian Ink Studio with your latest piece. We hope you love wearing it as much as we loved creating it.</p>
-      <p>If you have a moment, we'd be truly grateful if you shared your experience â€” it helps other clients discover the studio and helps us keep improving.</p>
+      <p>If you have a moment, we'd be truly grateful if you shared your experience — it helps other clients discover the studio and helps us keep improving.</p>
       ${goldButton(`${SITE_URL}/#reviews`, 'Leave a Review')}
       <p>Remember to follow your aftercare guide closely over the next few weeks for the best healing results.</p>`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to,
       subject: `Thank You From Obsidian Ink Studio`,
@@ -294,10 +315,12 @@ export async function sendAdminNewBookingAlert(booking: BookingLike): Promise<Em
       )}
       ${goldButton(`${SITE_URL}/admin/bookings`, 'Review in Admin Panel')}`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to: ADMIN_NOTIFY_EMAIL,
-      subject: `New Booking Request â€” ${code(booking)}`,
+      subject: `New Booking Request — ${code(booking)}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
@@ -320,10 +343,10 @@ export async function sendAdminDailySummaryEmail(stats: DailySummaryStats): Prom
     const appointmentsHtml = stats.todaysAppointments.length
       ? stats.todaysAppointments
           .map((b) =>
-            detailRow(b.time || 'â€”', `${name(b)} â€” ${b.style || 'N/A'} (${code(b)})`)
+            detailRow(b.time || '—', `${name(b)} — ${b.style || 'N/A'} (${code(b)})`)
           )
           .join('')
-      : detailRow('â€”', 'No appointments scheduled for today');
+      : detailRow('—', 'No appointments scheduled for today');
 
     const html = wrapper(
       'Daily Summary',
@@ -337,10 +360,12 @@ export async function sendAdminDailySummaryEmail(stats: DailySummaryStats): Prom
       ${detailsTable(appointmentsHtml)}
       ${goldButton(`${SITE_URL}/admin/bookings`, 'Open Admin Panel')}`
     );
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to: ADMIN_NOTIFY_EMAIL,
-      subject: `Daily Summary â€” ${stats.date}`,
+      subject: `Daily Summary — ${stats.date}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
