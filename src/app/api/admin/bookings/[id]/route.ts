@@ -1,6 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
+import {
+  sendBookingApprovedEmail,
+  sendBookingRejectedEmail,
+  sendBookingRescheduledEmail,
+  sendReviewRequestEmail,
+  sendBookingCancelledEmail,
+} from '@/lib/email';
+
+export const dynamic = 'force-dynamic';
 
 type BookingRow = {
   id: number;
@@ -63,6 +72,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await logActivity(session?.email, 'booking.updated', `Booking #${id} updated`);
   }
 
+  const updatedBooking = updated[0];
+  const statusChanged = Boolean(body.status) && body.status !== existing.status;
+
+  if (statusChanged && body.status === 'Confirmed') {
+    sendBookingApprovedEmail(updatedBooking).catch(() => {});
+  } else if (statusChanged && body.status === 'Cancelled') {
+    sendBookingRejectedEmail(updatedBooking, updatedBooking?.admin_notes || undefined).catch(() => {});
+  } else if (statusChanged && body.status === 'Completed') {
+    sendReviewRequestEmail(updatedBooking).catch(() => {});
+  }
+
+  const dateChanged = Boolean(body.date) && body.date !== existing.date;
+  const timeChanged = Boolean(body.time) && body.time !== existing.time;
+  if (!statusChanged && (dateChanged || timeChanged)) {
+    sendBookingRescheduledEmail(updatedBooking, existing.date, existing.time).catch(() => {});
+  }
+
   return NextResponse.json({ booking: updated[0] });
 }
 
@@ -83,6 +109,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   const session = await getSessionFromRequest(req);
   await logActivity(session?.email, 'booking.cancelled', `Booking #${id} cancelled`);
+
+  sendBookingCancelledEmail(updated[0]).catch(() => {});
 
   return NextResponse.json({ booking: updated[0] });
 }

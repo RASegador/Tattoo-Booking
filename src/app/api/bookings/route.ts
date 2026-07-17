@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { generateBookingId } from '@/lib/bookings';
+import { sendBookingConfirmationEmail, sendAdminNewBookingAlert } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,10 @@ export async function POST(req: NextRequest) {
     `;
 
     await logActivity(null, 'booking.created', `New booking ${bookingCode} from ${body.fullName}`);
+
+    const createdBooking = rows[0];
+    sendBookingConfirmationEmail(createdBooking).catch(() => {});
+    sendAdminNewBookingAlert(createdBooking).catch(() => {});
 
     return NextResponse.json({ ok: true, booking: rows[0] }, { status: 201 });
   } catch (err) {
