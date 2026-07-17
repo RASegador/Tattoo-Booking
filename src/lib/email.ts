@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { sql } from './db';
 
 let _resend: Resend | null = null;
 function getResendClient(): Resend | null {
@@ -34,6 +35,9 @@ export type BookingLike = {
   adminNotes?: string;
   estimated_duration?: string;
   estimatedDuration?: string;
+  artist_id?: number | string | null;
+  artist_name?: string;
+  artistName?: string;
 };
 
 function code(b: BookingLike): string {
@@ -44,6 +48,41 @@ function name(b: BookingLike): string {
 }
 function recipient(b: BookingLike): string {
   return b.email || '';
+}
+function artistName(b: BookingLike): string {
+  return b.artist_name || b.artistName || '';
+}
+function designSummary(b: BookingLike): string {
+  return [b.style, b.size, b.placement].filter(Boolean).join(' · ') || '—';
+}
+
+type StudioInfo = {
+  address: string;
+  prep_instructions: string;
+  contact_email: string;
+  contact_phone: string;
+};
+
+const DEFAULT_STUDIO_INFO: StudioInfo = {
+  address: 'San Vicente, Camarines Norte, Philippines',
+  prep_instructions:
+    'Please arrive well-rested and hydrated, and eat a solid meal beforehand. Avoid alcohol and blood-thinning medication for at least 24 hours prior to your session, and wear comfortable clothing that allows easy access to the tattoo placement area.',
+  contact_email: 'ralph.segador03@gmail.com',
+  contact_phone: '0994 147 5924',
+};
+
+async function getStudioInfo(): Promise<StudioInfo> {
+  try {
+    const rows = await sql`SELECT content FROM site_content WHERE section_key = 'studio_info' LIMIT 1`;
+    const content = rows[0]?.content as Partial<StudioInfo> | undefined;
+    return { ...DEFAULT_STUDIO_INFO, ...(content || {}) };
+  } catch {
+    return DEFAULT_STUDIO_INFO;
+  }
+}
+
+function contactInfoLine(info: StudioInfo): string {
+  return `<p style="color:rgba(255,255,255,0.6); font-size:13px;">Questions? Reach us at <a href="mailto:${info.contact_email}" style="color:#c9a24b; text-decoration:none;">${info.contact_email}</a> or ${info.contact_phone}.</p>`;
 }
 
 function wrapper(title: string, bodyHtml: string): string {
@@ -93,6 +132,7 @@ export async function sendBookingConfirmationEmail(booking: BookingLike): Promis
       <p>Thank you for requesting an appointment at Obsidian Ink Studio. We've received your booking request and our team will review it shortly.</p>
       ${detailsTable(
         detailRow('Booking Code', code(booking)) +
+          (artistName(booking) ? detailRow('Artist', artistName(booking)) : '') +
           detailRow('Style', booking.style || '') +
           detailRow('Size', booking.size || '') +
           detailRow('Placement', booking.placement || '') +
@@ -121,18 +161,24 @@ export async function sendBookingApprovedEmail(booking: BookingLike): Promise<Em
   try {
     const to = recipient(booking);
     if (!to) return { success: false, error: 'No recipient email on booking' };
+    const studioInfo = await getStudioInfo();
     const html = wrapper(
       'Appointment Confirmed',
       `<p>Hi ${name(booking)},</p>
       <p>Great news — your appointment is <strong style="color:#c9a24b;">confirmed</strong>. We look forward to creating something incredible with you.</p>
       ${detailsTable(
         detailRow('Booking Code', code(booking)) +
-          detailRow('Date', booking.date || '') +
-          detailRow('Time', booking.time || '') +
-          detailRow('Style', booking.style || '') +
-          detailRow('Placement', booking.placement || '')
+          detailRow('Client Name', name(booking)) +
+          detailRow('Artist', artistName(booking) || 'To be assigned') +
+          detailRow('Appointment Date', booking.date || '') +
+          detailRow('Appointment Time', booking.time || '') +
+          detailRow('Tattoo Design', designSummary(booking)) +
+          detailRow('Studio Address', studioInfo.address)
       )}
-      <p>Reminder: a non-refundable deposit secures your slot and is deducted from your final price on the day of your session. Please arrive well-rested, hydrated, and having eaten a solid meal beforehand.</p>`
+      <p style="margin-top:20px; color:rgba(255,255,255,0.5); font-size:12px; letter-spacing:1px; text-transform:uppercase;">Preparation Instructions</p>
+      <p>${studioInfo.prep_instructions}</p>
+      <p>Reminder: a non-refundable deposit secures your slot and is deducted from your final price on the day of your session.</p>
+      ${contactInfoLine(studioInfo)}`
     );
     const client = getResendClient();
     if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
@@ -153,14 +199,16 @@ export async function sendBookingRejectedEmail(booking: BookingLike, reason?: st
   try {
     const to = recipient(booking);
     if (!to) return { success: false, error: 'No recipient email on booking' };
+    const studioInfo = await getStudioInfo();
     const html = wrapper(
       'About Your Booking Request',
       `<p>Hi ${name(booking)},</p>
-      <p>Thank you for your interest in Obsidian Ink Studio. Unfortunately, we're unable to accommodate your booking request (${code(
-        booking
-      )}) at this time.</p>
+      ${detailsTable(detailRow('Booking Code', code(booking)) + detailRow('Booking Status', 'Declined'))}
+      <p>Thank you for your interest in Obsidian Ink Studio. Unfortunately, we're unable to accommodate your booking request at this time.</p>
       ${reason ? `<p style="color:rgba(255,255,255,0.7); font-style:italic;">"${reason}"</p>` : ''}
-      <p>We'd love the opportunity to work with you — please feel free to submit a new booking request with an alternate date or details, and our team will be happy to help.</p>`
+      <p style="margin-top:20px; color:rgba(255,255,255,0.5); font-size:12px; letter-spacing:1px; text-transform:uppercase;">How to Rebook</p>
+      <p>We'd genuinely love the opportunity to work with you. Simply submit a new booking request through our website with an alternate date or details, and our team will review it right away.</p>
+      ${contactInfoLine(studioInfo)}`
     );
     const client = getResendClient();
     if (!client) return { success: false, error: 'RESEND_API_KEY not set' };

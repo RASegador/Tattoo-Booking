@@ -259,6 +259,18 @@ async function seedIfEmpty(): Promise<void> {
     await sql`INSERT INTO site_content (section_key, content) VALUES ('contact', ${JSON.stringify(contactContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
     await sql`INSERT INTO site_content (section_key, content) VALUES ('faq', ${JSON.stringify(faqs)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
   }
+
+  // studio_info — additive, independent of the "site_content totally empty" gate above,
+  // since production's site_content table is already seeded (hero/about/contact/faq exist).
+  // ON CONFLICT DO NOTHING makes this safe to run on every ensureSchema() call.
+  const studioInfoContent = {
+    address: 'San Vicente, Camarines Norte, Philippines',
+    prep_instructions:
+      "Please arrive well-rested and hydrated, and eat a solid meal beforehand. Avoid alcohol and blood-thinning medication for at least 24 hours prior to your session, and wear comfortable clothing that allows easy access to the tattoo placement area.",
+    contact_email: 'ralph.segador03@gmail.com',
+    contact_phone: '0994 147 5924',
+  };
+  await sql`INSERT INTO site_content (section_key, content) VALUES ('studio_info', ${JSON.stringify(studioInfoContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
 }
 
 export async function logActivity(adminEmail: string | null | undefined, action: string, details: string): Promise<void> {

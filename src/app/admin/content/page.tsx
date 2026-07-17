@@ -28,15 +28,30 @@ type ContactContent = {
 
 type FaqItem = { q: string; a: string };
 
+type StudioInfoContent = {
+  address: string;
+  prep_instructions: string;
+  contact_email: string;
+  contact_phone: string;
+};
+
 type SiteContent = {
   hero: HeroContent;
   about: AboutContent;
   contact: ContactContent;
   faq: FaqItem[];
+  studio_info: StudioInfoContent;
 };
 
-const SECTION_TABS = ['hero', 'about', 'contact', 'faq'] as const;
+const SECTION_TABS = ['hero', 'about', 'contact', 'faq', 'studio_info'] as const;
 type SectionTab = (typeof SECTION_TABS)[number];
+const SECTION_LABELS: Record<SectionTab, string> = {
+  hero: 'Hero',
+  about: 'About',
+  contact: 'Contact',
+  faq: 'FAQ',
+  studio_info: 'Studio Info',
+};
 
 export default function AdminContentPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
@@ -104,6 +119,9 @@ export default function AdminContentPage() {
   const updateContact = (patch: Partial<ContactContent>) => {
     setContent((c) => (c ? { ...c, contact: { ...c.contact, ...patch } } : c));
   };
+  const updateStudioInfo = (patch: Partial<StudioInfoContent>) => {
+    setContent((c) => (c ? { ...c, studio_info: { ...c.studio_info, ...patch } } : c));
+  };
   const updateFaqItem = (index: number, patch: Partial<FaqItem>) => {
     setContent((c) => {
       if (!c) return c;
@@ -149,13 +167,13 @@ export default function AdminContentPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 data-cursor-hover
-                className={`px-4 py-2 rounded-lg text-xs uppercase tracking-wide border transition-colors capitalize ${
+                className={`px-4 py-2 rounded-lg text-xs uppercase tracking-wide border transition-colors ${
                   activeTab === tab
                     ? 'border-gold bg-gold/10 text-gold'
                     : 'border-white/15 text-white/60 hover:border-white/40'
                 }`}
               >
-                {tab}
+                {SECTION_LABELS[tab]}
               </button>
             ))}
           </div>
@@ -323,6 +341,64 @@ export default function AdminContentPage() {
                   {savingSection === 'faq' ? 'Saving...' : 'Save FAQ'}
                 </button>
                 {savedSection === 'faq' && <span className="text-cyan text-xs uppercase tracking-wide">Saved</span>}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'studio_info' && (
+            <div className="glass-panel rounded-xl p-6 border border-white/10 space-y-4">
+              <h2 className="font-display text-xl mb-2">Studio Info</h2>
+              <p className="text-xs text-white/40 mb-2">
+                Used in booking confirmation and decline emails (studio address, preparation instructions, and contact details).
+              </p>
+              <div>
+                <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Studio Address</label>
+                <input
+                  type="text"
+                  value={content.studio_info.address}
+                  onChange={(e) => updateStudioInfo({ address: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Preparation Instructions</label>
+                <textarea
+                  rows={4}
+                  value={content.studio_info.prep_instructions}
+                  onChange={(e) => updateStudioInfo({ prep_instructions: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Contact Email</label>
+                  <input
+                    type="text"
+                    value={content.studio_info.contact_email}
+                    onChange={(e) => updateStudioInfo({ contact_email: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Contact Phone</label>
+                  <input
+                    type="text"
+                    value={content.studio_info.contact_phone}
+                    onChange={(e) => updateStudioInfo({ contact_phone: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => saveSection('studio_info', content.studio_info)}
+                  disabled={savingSection === 'studio_info'}
+                  data-cursor-hover
+                  className="px-6 py-3 bg-crimson hover:bg-crimson-light disabled:opacity-50 text-sm uppercase tracking-wide transition-colors rounded-lg"
+                >
+                  {savingSection === 'studio_info' ? 'Saving...' : 'Save Studio Info'}
+                </button>
+                {savedSection === 'studio_info' && <span className="text-cyan text-xs uppercase tracking-wide">Saved</span>}
               </div>
             </div>
           )}
