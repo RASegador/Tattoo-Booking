@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const query = `SELECT * FROM bookings ${whereClause} ORDER BY date DESC NULLS LAST, time DESC NULLS LAST, created_at DESC`;
 
   try {
-    const rows = await sql.query(query, params);
+    const rows = await sql(query, params);
     return NextResponse.json({ bookings: rows });
   } catch (err) {
     return NextResponse.json({ error: 'Failed to load bookings', detail: String(err) }, { status: 500 });
