@@ -16,6 +16,8 @@ export type Booking = {
   status: BookingStatus;
   createdAt: string;
   estimatedDuration: string;
+  artistId?: number | null;
+  artistName?: string;
 };
 
 const STORAGE_KEY = 'ink_studio_bookings_v1';

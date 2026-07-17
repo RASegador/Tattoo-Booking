@@ -17,6 +17,8 @@ type BookingRow = {
   date: string;
   time: string;
   admin_notes: string | null;
+  artist_id: number | null;
+  artist_name: string | null;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -26,7 +28,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: 'Invalid booking id' }, { status: 400 });
   }
 
-  let body: { status?: string; admin_notes?: string; date?: string; time?: string };
+  let body: {
+    status?: string;
+    admin_notes?: string;
+    date?: string;
+    time?: string;
+    artist_id?: number | null;
+    artist_name?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -54,12 +63,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
+  // artist_id/artist_name use "key present in body" rather than `?? existing`, since
+  // an explicit `null` (unassigning an artist via "No Preference") is a valid value that
+  // `??` would otherwise silently overwrite with the existing artist.
+  const nextArtistId = 'artist_id' in body ? body.artist_id ?? null : existing.artist_id;
+  const nextArtistName = 'artist_name' in body ? body.artist_name ?? '' : existing.artist_name;
+
   const updated = await sql`
     UPDATE bookings SET
       status = ${nextStatus},
       admin_notes = ${body.admin_notes ?? existing.admin_notes},
       date = ${nextDate},
       time = ${nextTime},
+      artist_id = ${nextArtistId},
+      artist_name = ${nextArtistName},
       updated_at = now()
     WHERE id = ${id}
     RETURNING *

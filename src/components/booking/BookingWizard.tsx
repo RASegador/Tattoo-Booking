@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Calendar from './Calendar';
 import { Booking, generateBookingId, saveBooking, TIME_SLOTS } from '@/lib/bookings';
@@ -11,13 +11,23 @@ const SIZES = ['Small (2-4 in)', 'Medium (5-8 in)', 'Large (9-14 in)', 'Full Sle
 const PLACEMENTS = ['Forearm', 'Upper Arm', 'Shoulder', 'Back', 'Calf', 'Ribcage', 'Chest', 'Thigh', 'Hand', 'Neck'];
 
 const STEP_LABELS = [
-  'Style', 'Size', 'Placement', 'References', 'Idea', 'Date', 'Time', 'Contact', 'Review',
+  'Style', 'Size', 'Placement', 'Artist', 'References', 'Idea', 'Date', 'Time', 'Contact', 'Review',
 ];
+
+type Artist = {
+  id: number;
+  name: string;
+  photo_data: string;
+  specialties: string[];
+  available: boolean;
+};
 
 type FormState = {
   style: string;
   size: string;
   placement: string;
+  artistId: number | null;
+  artistName: string;
   referenceFiles: File[];
   description: string;
   date: string | null;
@@ -33,6 +43,8 @@ const initialState: FormState = {
   style: '',
   size: '',
   placement: '',
+  artistId: null,
+  artistName: '',
   referenceFiles: [],
   description: '',
   date: null,
@@ -80,6 +92,28 @@ export default function BookingWizard() {
   const [submitted, setSubmitted] = useState<Booking | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [direction, setDirection] = useState(1);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [loadingArtists, setLoadingArtists] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/artists');
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data?.artists)) {
+          setArtists(data.artists);
+        }
+      } catch {
+        // keep empty on failure — artist selection becomes optional/no preference
+      } finally {
+        if (!cancelled) setLoadingArtists(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const totalSteps = STEP_LABELS.length;
 
@@ -97,12 +131,13 @@ export default function BookingWizard() {
       case 0: return !!form.style;
       case 1: return !!form.size;
       case 2: return !!form.placement;
-      case 3: return true;
-      case 4: return form.description.trim().length > 0;
-      case 5: return !!form.date;
-      case 6: return !!form.time;
-      case 7: return form.fullName.trim().length > 1 && form.mobile.trim().length > 6;
-      case 8: return form.agreed;
+      case 3: return true; // artist selection — "No Preference" is a valid choice
+      case 4: return true;
+      case 5: return form.description.trim().length > 0;
+      case 6: return !!form.date;
+      case 7: return !!form.time;
+      case 8: return form.fullName.trim().length > 1 && form.mobile.trim().length > 6;
+      case 9: return form.agreed;
       default: return true;
     }
   };
@@ -120,6 +155,8 @@ export default function BookingWizard() {
       style: form.style,
       size: form.size,
       placement: form.placement,
+      artistId: form.artistId,
+      artistName: form.artistName,
       referenceImageNames: form.referenceFiles.map((f) => f.name),
       description: form.description,
       date: form.date!,
@@ -146,6 +183,8 @@ export default function BookingWizard() {
           style: b.style,
           size: b.size,
           placement: b.placement,
+          artistId: b.artist_id ?? requestBody.artistId,
+          artistName: b.artist_name ?? requestBody.artistName,
           referenceImageNames: b.reference_image_names ?? requestBody.referenceImageNames,
           description: b.description,
           date: b.date,
@@ -173,6 +212,8 @@ export default function BookingWizard() {
       style: form.style,
       size: form.size,
       placement: form.placement,
+      artistId: form.artistId,
+      artistName: form.artistName,
       referenceImageNames: form.referenceFiles.map((f) => f.name),
       description: form.description,
       date: form.date!,
@@ -204,6 +245,9 @@ export default function BookingWizard() {
             <div className="flex justify-between text-sm"><span className="text-white/40">Booking ID</span><span className="text-gold font-mono">{submitted.id}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Style</span><span>{submitted.style}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Placement</span><span>{submitted.placement}</span></div>
+            {submitted.artistName && (
+              <div className="flex justify-between text-sm"><span className="text-white/40">Artist</span><span>{submitted.artistName}</span></div>
+            )}
             <div className="flex justify-between text-sm"><span className="text-white/40">Date &amp; Time</span><span>{submitted.date} · {submitted.time}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Est. Duration</span><span>{submitted.estimatedDuration}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Status</span><span className="text-gold">{submitted.status}</span></div>
@@ -273,6 +317,50 @@ export default function BookingWizard() {
             )}
             {step === 3 && (
               <div>
+                <h3 className="font-display text-2xl mb-2">Choose Your Artist</h3>
+                <p className="text-white/50 text-sm mb-6">Optional — pick the artist whose style speaks to you, or let us match you.</p>
+                {loadingArtists ? (
+                  <p className="text-white/40 text-sm">Loading artists...</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, artistId: null, artistName: '' }))}
+                      data-cursor-hover
+                      className={`px-4 py-4 rounded-xl border text-sm text-center transition-all ${
+                        form.artistId === null
+                          ? 'border-gold bg-gold/10 text-gold'
+                          : 'border-white/15 text-white/70 hover:border-white/40'
+                      }`}
+                    >
+                      No Preference
+                    </button>
+                    {artists.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, artistId: a.id, artistName: a.name }))}
+                        data-cursor-hover
+                        className={`px-4 py-4 rounded-xl border text-sm text-center transition-all flex flex-col items-center gap-2 ${
+                          form.artistId === a.id
+                            ? 'border-gold bg-gold/10 text-gold'
+                            : 'border-white/15 text-white/70 hover:border-white/40'
+                        }`}
+                      >
+                        {a.photo_data && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={a.photo_data} alt={a.name} className="w-12 h-12 rounded-full object-cover" />
+                        )}
+                        <span>{a.name}</span>
+                        {!a.available && <span className="text-[10px] text-white/40 uppercase">Fully Booked</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {step === 4 && (
+              <div>
                 <h3 className="font-display text-2xl mb-3">Upload Reference Images</h3>
                 <p className="text-white/50 text-sm mb-6">Optional — up to 6 images to help us understand your vision.</p>
                 <label
@@ -292,7 +380,7 @@ export default function BookingWizard() {
                 )}
               </div>
             )}
-            {step === 4 && (
+            {step === 5 && (
               <div>
                 <h3 className="font-display text-2xl mb-6">Describe Your Tattoo Idea</h3>
                 <textarea
@@ -304,13 +392,13 @@ export default function BookingWizard() {
                 />
               </div>
             )}
-            {step === 5 && (
+            {step === 6 && (
               <div>
                 <h3 className="font-display text-2xl mb-6">Choose Preferred Date</h3>
                 <Calendar selected={form.date} onSelect={(d) => setForm((f) => ({ ...f, date: d }))} />
               </div>
             )}
-            {step === 6 && (
+            {step === 7 && (
               <div>
                 <h3 className="font-display text-2xl mb-6">Select Available Time</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -331,7 +419,7 @@ export default function BookingWizard() {
                 {form.date && <p className="text-xs text-white/40 mt-4">Selected date: {form.date}</p>}
               </div>
             )}
-            {step === 7 && (
+            {step === 8 && (
               <div className="space-y-5">
                 <h3 className="font-display text-2xl mb-2">Your Contact Details</h3>
                 <div>
@@ -371,13 +459,14 @@ export default function BookingWizard() {
                 </div>
               </div>
             )}
-            {step === 8 && (
+            {step === 9 && (
               <div>
                 <h3 className="font-display text-2xl mb-6">Review Your Booking</h3>
                 <div className="space-y-3 text-sm mb-6">
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Style</span><span>{form.style}</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Size</span><span>{form.size}</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Placement</span><span>{form.placement}</span></div>
+                  <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Artist</span><span>{form.artistName || 'No Preference'}</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">References</span><span>{form.referenceFiles.length || 0} file(s)</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Date &amp; Time</span><span>{form.date} · {form.time}</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Name</span><span>{form.fullName}</span></div>

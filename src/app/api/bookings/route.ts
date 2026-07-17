@@ -9,6 +9,8 @@ type BookingRequestBody = {
   style?: string;
   size?: string;
   placement?: string;
+  artistId?: number | null;
+  artistName?: string;
   referenceImageNames?: string[];
   description?: string;
   date?: string;
@@ -39,11 +41,12 @@ export async function POST(req: NextRequest) {
 
     const rows = await sql`
       INSERT INTO bookings (
-        booking_code, style, size, placement, reference_image_names, description,
+        booking_code, style, size, placement, artist_id, artist_name, reference_image_names, description,
         date, time, full_name, mobile, email, notes, status, estimated_duration
       )
       VALUES (
         ${bookingCode}, ${body.style ?? ''}, ${body.size ?? ''}, ${body.placement ?? ''},
+        ${body.artistId ?? null}, ${body.artistName ?? ''},
         ${JSON.stringify(body.referenceImageNames ?? [])}::jsonb, ${body.description ?? ''},
         ${body.date}, ${body.time}, ${body.fullName}, ${body.mobile}, ${body.email ?? ''},
         ${body.notes ?? ''}, 'Pending', ${body.estimatedDuration ?? ''}

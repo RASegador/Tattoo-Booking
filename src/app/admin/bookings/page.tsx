@@ -10,6 +10,8 @@ type Booking = {
   style: string;
   size: string;
   placement: string;
+  artist_id: number | null;
+  artist_name: string | null;
   reference_image_names: string[];
   description: string;
   date: string;
@@ -24,6 +26,8 @@ type Booking = {
   created_at: string;
   updated_at: string;
 };
+
+type ArtistOption = { id: number; name: string; active: boolean };
 
 const STATUS_TABS: Array<BookingStatus | 'All'> = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rescheduled'];
 
@@ -46,6 +50,21 @@ export default function AdminBookingsPage() {
   const [adminNotesDraft, setAdminNotesDraft] = useState<Record<string, string>>({});
   const [rescheduleDraft, setRescheduleDraft] = useState<Record<string, { date: string; time: string }>>({});
   const [rejectNoteDraft, setRejectNoteDraft] = useState<Record<string, string>>({});
+  const [artists, setArtists] = useState<ArtistOption[]>([]);
+  const [reassignDraft, setReassignDraft] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/artists', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        setArtists((data.artists || []).filter((a: ArtistOption) => a.active));
+      } catch {
+        // artist reassignment becomes unavailable, rest of the page still works
+      }
+    })();
+  }, []);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -113,6 +132,18 @@ export default function AdminBookingsPage() {
     const notes = adminNotesDraft[id];
     if (notes === undefined) return;
     await patchBooking(id, { admin_notes: notes });
+  };
+
+  const handleReassign = async (id: string) => {
+    const selected = reassignDraft[id];
+    if (selected === undefined) return;
+    if (selected === '') {
+      await patchBooking(id, { artist_id: null, artist_name: '' });
+      return;
+    }
+    const artist = artists.find((a) => String(a.id) === selected);
+    if (!artist) return;
+    await patchBooking(id, { artist_id: artist.id, artist_name: artist.name });
   };
 
   return (
@@ -210,7 +241,10 @@ export default function AdminBookingsPage() {
                     <p className="text-sm text-white/50 mt-1">
                       {b.placement} · {b.size} · {b.date} at {b.time}
                     </p>
-                    <p className="text-xs text-white/40 mt-2">{b.mobile}{b.email ? ` · ${b.email}` : ''}</p>
+                    <p className="text-xs text-white/40 mt-2">
+                      {b.mobile}{b.email ? ` · ${b.email}` : ''}
+                      {b.artist_name ? ` · Artist: ${b.artist_name}` : ' · No artist assigned'}
+                    </p>
                   </div>
                   <div className="flex items-center text-white/30 text-xs uppercase tracking-wide">
                     {expanded ? 'Collapse' : 'Details'}
@@ -243,6 +277,31 @@ export default function AdminBookingsPage() {
                       <div>
                         <p className="text-xs uppercase tracking-wide text-white/40 mb-1">Estimated Duration</p>
                         <p className="text-sm text-white/70">{b.estimated_duration || '—'}</p>
+                      </div>
+                    </div>
+
+                    <div className="border border-white/10 rounded-lg p-4">
+                      <p className="text-xs uppercase tracking-wide text-white/40 mb-3">Assigned Artist</p>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <select
+                          value={reassignDraft[b.id] ?? String(b.artist_id ?? '')}
+                          onChange={(e) => setReassignDraft((d) => ({ ...d, [b.id]: e.target.value }))}
+                          className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm focus:border-gold focus:outline-none transition-colors"
+                        >
+                          <option value="">No Preference</option>
+                          {artists.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleReassign(b.id)}
+                          data-cursor-hover
+                          className="px-3 py-2 text-xs uppercase border border-white/15 hover:border-gold hover:text-gold rounded-lg transition-colors"
+                        >
+                          Reassign
+                        </button>
                       </div>
                     </div>
 
