@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { GalleryArtwork } from './GalleryModal';
+import { formatPHPRange } from '@/lib/currency';
 
 function isDataUrl(src: string) {
   return src.startsWith('data:');
@@ -120,6 +121,11 @@ export default function ArtworkViewer({
             {index + 1} / {artworks.length}
           </p>
           <h3 className="font-display text-2xl mb-4">{artwork.title}</h3>
+          {artwork.artist_name && (
+            <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-4">
+              By <span className="text-gold/80">{artwork.artist_name}</span>
+            </p>
+          )}
           <dl className="grid grid-cols-2 gap-4 text-sm mb-6">
             <div>
               <dt className="text-white/40 text-xs uppercase tracking-wide">Placement</dt>
@@ -135,7 +141,7 @@ export default function ArtworkViewer({
             </div>
           </dl>
           <p className="text-white/60 text-sm leading-relaxed mb-6">{artwork.description}</p>
-          <p className="text-gold font-display text-lg mb-6">{artwork.price}</p>
+          <p className="text-gold font-display text-lg mb-6">{formatPHPRange(artwork.price_min, artwork.price_max)}</p>
 
           <div className="flex items-center gap-4">
             <button

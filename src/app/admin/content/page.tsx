@@ -35,15 +35,21 @@ type StudioInfoContent = {
   contact_phone: string;
 };
 
+type PricingContent = {
+  deposit_amount: number;
+  starting_price_note: string;
+};
+
 type SiteContent = {
   hero: HeroContent;
   about: AboutContent;
   contact: ContactContent;
   faq: FaqItem[];
   studio_info: StudioInfoContent;
+  pricing: PricingContent;
 };
 
-const SECTION_TABS = ['hero', 'about', 'contact', 'faq', 'studio_info'] as const;
+const SECTION_TABS = ['hero', 'about', 'contact', 'faq', 'studio_info', 'pricing'] as const;
 type SectionTab = (typeof SECTION_TABS)[number];
 const SECTION_LABELS: Record<SectionTab, string> = {
   hero: 'Hero',
@@ -51,6 +57,7 @@ const SECTION_LABELS: Record<SectionTab, string> = {
   contact: 'Contact',
   faq: 'FAQ',
   studio_info: 'Studio Info',
+  pricing: 'Pricing',
 };
 
 export default function AdminContentPage() {
@@ -121,6 +128,9 @@ export default function AdminContentPage() {
   };
   const updateStudioInfo = (patch: Partial<StudioInfoContent>) => {
     setContent((c) => (c ? { ...c, studio_info: { ...c.studio_info, ...patch } } : c));
+  };
+  const updatePricing = (patch: Partial<PricingContent>) => {
+    setContent((c) => (c ? { ...c, pricing: { ...c.pricing, ...patch } } : c));
   };
   const updateFaqItem = (index: number, patch: Partial<FaqItem>) => {
     setContent((c) => {
@@ -399,6 +409,44 @@ export default function AdminContentPage() {
                   {savingSection === 'studio_info' ? 'Saving...' : 'Save Studio Info'}
                 </button>
                 {savedSection === 'studio_info' && <span className="text-cyan text-xs uppercase tracking-wide">Saved</span>}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'pricing' && (
+            <div className="glass-panel rounded-xl p-6 border border-white/10 space-y-4">
+              <h2 className="font-display text-xl mb-2">Pricing</h2>
+              <p className="text-xs text-white/40 mb-2">
+                Deposit amount is shown in the booking flow and confirmation emails; the starting price note appears in the FAQ and AI assistant.
+              </p>
+              <div>
+                <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Deposit Amount (₱)</label>
+                <input
+                  type="number"
+                  value={content.pricing.deposit_amount}
+                  onChange={(e) => updatePricing({ deposit_amount: Number(e.target.value) })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Starting Price Note</label>
+                <textarea
+                  rows={3}
+                  value={content.pricing.starting_price_note}
+                  onChange={(e) => updatePricing({ starting_price_note: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => saveSection('pricing', content.pricing)}
+                  disabled={savingSection === 'pricing'}
+                  data-cursor-hover
+                  className="px-6 py-3 bg-crimson hover:bg-crimson-light disabled:opacity-50 text-sm uppercase tracking-wide transition-colors rounded-lg"
+                >
+                  {savingSection === 'pricing' ? 'Saving...' : 'Save Pricing'}
+                </button>
+                {savedSection === 'pricing' && <span className="text-cyan text-xs uppercase tracking-wide">Saved</span>}
               </div>
             </div>
           )}

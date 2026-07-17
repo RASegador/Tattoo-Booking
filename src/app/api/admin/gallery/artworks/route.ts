@@ -23,9 +23,12 @@ type ArtworkInput = {
   placement?: string;
   size?: string;
   duration?: string;
-  price?: string;
+  price_min?: number | null;
+  price_max?: number | null;
   description?: string;
   featured?: boolean;
+  artist_id?: number | null;
+  artist_name?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -43,10 +46,14 @@ export async function POST(req: NextRequest) {
   }
 
   const rows = await sql`
-    INSERT INTO artworks (category_slug, title, image_data, placement, size, duration, price, description, featured)
+    INSERT INTO artworks (
+      category_slug, title, image_data, placement, size, duration,
+      price_min, price_max, description, featured, artist_id, artist_name
+    )
     VALUES (
       ${body.category_slug}, ${body.title}, ${body.image_data ?? ''}, ${body.placement ?? ''},
-      ${body.size ?? ''}, ${body.duration ?? ''}, ${body.price ?? ''}, ${body.description ?? ''}, ${body.featured ?? false}
+      ${body.size ?? ''}, ${body.duration ?? ''}, ${body.price_min ?? null}, ${body.price_max ?? null},
+      ${body.description ?? ''}, ${body.featured ?? false}, ${body.artist_id ?? null}, ${body.artist_name ?? ''}
     )
     RETURNING *
   `;

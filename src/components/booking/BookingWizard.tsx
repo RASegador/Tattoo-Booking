@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Calendar from './Calendar';
 import { Booking, generateBookingId, saveBooking, TIME_SLOTS } from '@/lib/bookings';
 import { categories } from '@/lib/data';
+import { formatPHP } from '@/lib/currency';
 
 const STYLES = categories.map((c) => c.name);
 const SIZES = ['Small (2-4 in)', 'Medium (5-8 in)', 'Large (9-14 in)', 'Full Sleeve'];
@@ -94,6 +95,7 @@ export default function BookingWizard() {
   const [direction, setDirection] = useState(1);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(true);
+  const [depositAmount, setDepositAmount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +110,24 @@ export default function BookingWizard() {
         // keep empty on failure — artist selection becomes optional/no preference
       } finally {
         if (!cancelled) setLoadingArtists(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/public/content');
+        const data = await res.json();
+        if (!cancelled && typeof data?.pricing?.deposit_amount === 'number') {
+          setDepositAmount(data.pricing.deposit_amount);
+        }
+      } catch {
+        // deposit note just won't show a figure
       }
     })();
     return () => {
@@ -251,6 +271,9 @@ export default function BookingWizard() {
             <div className="flex justify-between text-sm"><span className="text-white/40">Date &amp; Time</span><span>{submitted.date} · {submitted.time}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Est. Duration</span><span>{submitted.estimatedDuration}</span></div>
             <div className="flex justify-between text-sm"><span className="text-white/40">Status</span><span className="text-gold">{submitted.status}</span></div>
+            {depositAmount != null && (
+              <div className="flex justify-between text-sm"><span className="text-white/40">Deposit to Secure Slot</span><span>{formatPHP(depositAmount)}</span></div>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="/admin" className="px-6 py-3 border border-white/20 text-sm uppercase tracking-wide hover:border-gold hover:text-gold transition-colors" data-cursor-hover>
@@ -482,6 +505,9 @@ export default function BookingWizard() {
                     className="mt-0.5 accent-gold"
                   />
                   I agree to the studio&rsquo;s Terms &amp; Conditions, cancellation policy, and consent to age verification at the appointment.
+                  {depositAmount != null && (
+                    <> A non-refundable deposit of <span className="text-gold">{formatPHP(depositAmount)}</span> secures this slot.</>
+                  )}
                 </label>
               </div>
             )}

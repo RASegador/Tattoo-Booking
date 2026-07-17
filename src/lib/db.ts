@@ -190,9 +190,17 @@ async function seedIfEmpty(): Promise<void> {
     `;
   }
 
-  // gallery_categories + artworks
-  const catCount = await sql`SELECT count(*)::int AS c FROM gallery_categories`;
-  if (Number(catCount[0]?.c ?? 0) === 0) {
+  // gallery_categories + artworks — one-time migration to the 12-category spec with real
+  // (Unsplash) sample images and structured PHP pricing, gated by a sentinel row so it runs
+  // exactly once and never clobbers artwork edits made afterward through the admin gallery UI.
+  const galleryV2 = await sql`SELECT 1 FROM site_content WHERE section_key = ${'gallery_v2_migrated'} LIMIT 1`;
+  if (galleryV2.length === 0) {
+    // Categories dropped per the client's 12-category spec — cascades to their old artworks.
+    await sql`DELETE FROM gallery_categories WHERE slug IN ('anime', 'cover-ups', 'custom')`;
+
+    const primaryArtistRows = await sql`SELECT id, name FROM artists ORDER BY sort_order ASC, id ASC LIMIT 1`;
+    const primaryArtist = primaryArtistRows[0] as { id: number; name: string } | undefined;
+
     for (let i = 0; i < seedCategories.length; i++) {
       const cat = seedCategories[i];
       await sql`
@@ -200,15 +208,25 @@ async function seedIfEmpty(): Promise<void> {
         VALUES (${cat.slug}, ${cat.name}, ${cat.icon}, ${cat.description}, ${i})
         ON CONFLICT (slug) DO NOTHING
       `;
+      // Replace any old placeholder artworks (picsum images, free-text USD price) for this
+      // category with the new curated real-image, PHP-priced set.
+      await sql`DELETE FROM artworks WHERE category_slug = ${cat.slug}`;
       const artworks = getArtworksForCategory(cat.slug);
       for (const art of artworks) {
-        const imageUrl = `https://picsum.photos/seed/${art.seed}/700/900`;
         await sql`
-          INSERT INTO artworks (category_slug, title, image_data, placement, size, duration, price, description, featured)
-          VALUES (${cat.slug}, ${art.title}, ${imageUrl}, ${art.placement}, ${art.size}, ${art.duration}, ${art.price}, ${art.description}, false)
+          INSERT INTO artworks (
+            category_slug, title, image_data, placement, size, duration,
+            price_min, price_max, description, artist_id, artist_name, featured
+          )
+          VALUES (
+            ${cat.slug}, ${art.title}, ${art.imageUrl}, ${art.placement}, ${art.size}, ${art.duration},
+            ${art.priceMin}, ${art.priceMax}, ${art.description}, ${primaryArtist?.id ?? null}, ${primaryArtist?.name ?? ''}, false
+          )
         `;
       }
     }
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('gallery_v2_migrated', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
   }
 
   // testimonials
@@ -271,6 +289,13 @@ async function seedIfEmpty(): Promise<void> {
     contact_phone: '0994 147 5924',
   };
   await sql`INSERT INTO site_content (section_key, content) VALUES ('studio_info', ${JSON.stringify(studioInfoContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+
+  // pricing — same additive pattern as studio_info above.
+  const pricingContent = {
+    deposit_amount: 2000,
+    starting_price_note: 'Small minimalist pieces start around ₱2,500. Large-scale custom or realism work is quoted per session after a consultation.',
+  };
+  await sql`INSERT INTO site_content (section_key, content) VALUES ('pricing', ${JSON.stringify(pricingContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
 }
 
 export async function logActivity(adminEmail: string | null | undefined, action: string, details: string): Promise<void> {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { formatPHPRange } from '@/lib/currency';
 
 type Category = {
   id: string;
@@ -19,7 +20,8 @@ type Artwork = {
   placement: string;
   size: string;
   duration: string;
-  price: string;
+  price_min: number | null;
+  price_max: number | null;
   description: string;
   featured: boolean;
   created_at: string;
@@ -37,7 +39,8 @@ type NewArtworkForm = {
   placement: string;
   size: string;
   duration: string;
-  price: string;
+  priceMin: string;
+  priceMax: string;
   description: string;
   imageUrl: string;
 };
@@ -48,7 +51,8 @@ const emptyNewArtwork: NewArtworkForm = {
   placement: '',
   size: '',
   duration: '',
-  price: '',
+  priceMin: '',
+  priceMax: '',
   description: '',
   imageUrl: '',
 };
@@ -216,7 +220,8 @@ export default function AdminGalleryPage() {
           placement: newArtwork.placement,
           size: newArtwork.size,
           duration: newArtwork.duration,
-          price: newArtwork.price,
+          price_min: newArtwork.priceMin ? Number(newArtwork.priceMin) : null,
+          price_max: newArtwork.priceMax ? Number(newArtwork.priceMax) : null,
           description: newArtwork.description,
           featured: false,
         }),
@@ -500,13 +505,26 @@ export default function AdminGalleryPage() {
                         placeholder="Duration"
                         className="w-full bg-white/5 border border-white/15 rounded-lg px-2 py-1.5 text-sm focus:border-gold focus:outline-none"
                       />
-                      <input
-                        type="text"
-                        defaultValue={a.price}
-                        onChange={(e) => setEditArtworkDraft((d) => ({ ...d, price: e.target.value }))}
-                        placeholder="Price"
-                        className="w-full bg-white/5 border border-white/15 rounded-lg px-2 py-1.5 text-sm focus:border-gold focus:outline-none"
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="number"
+                          defaultValue={a.price_min ?? ''}
+                          onChange={(e) =>
+                            setEditArtworkDraft((d) => ({ ...d, price_min: e.target.value ? Number(e.target.value) : null }))
+                          }
+                          placeholder="Price Min (₱)"
+                          className="w-full bg-white/5 border border-white/15 rounded-lg px-2 py-1.5 text-sm focus:border-gold focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          defaultValue={a.price_max ?? ''}
+                          onChange={(e) =>
+                            setEditArtworkDraft((d) => ({ ...d, price_max: e.target.value ? Number(e.target.value) : null }))
+                          }
+                          placeholder="Price Max (₱)"
+                          className="w-full bg-white/5 border border-white/15 rounded-lg px-2 py-1.5 text-sm focus:border-gold focus:outline-none"
+                        />
+                      </div>
                       <textarea
                         defaultValue={a.description}
                         onChange={(e) => setEditArtworkDraft((d) => ({ ...d, description: e.target.value }))}
@@ -547,7 +565,7 @@ export default function AdminGalleryPage() {
                       <p className="text-xs text-white/40 mb-1">
                         {a.placement} · {a.size} · {a.duration}
                       </p>
-                      <p className="text-xs text-white/40 mb-2">{a.price}</p>
+                      <p className="text-xs text-white/40 mb-2">{formatPHPRange(a.price_min, a.price_max)}</p>
                       <p className="text-xs text-white/60 mb-3 line-clamp-2">{a.description}</p>
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -613,10 +631,17 @@ export default function AdminGalleryPage() {
                 className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm focus:border-gold focus:outline-none"
               />
               <input
-                type="text"
-                value={newArtwork.price}
-                onChange={(e) => setNewArtwork((f) => ({ ...f, price: e.target.value }))}
-                placeholder="Price"
+                type="number"
+                value={newArtwork.priceMin}
+                onChange={(e) => setNewArtwork((f) => ({ ...f, priceMin: e.target.value }))}
+                placeholder="Price Min (₱)"
+                className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm focus:border-gold focus:outline-none"
+              />
+              <input
+                type="number"
+                value={newArtwork.priceMax}
+                onChange={(e) => setNewArtwork((f) => ({ ...f, priceMax: e.target.value }))}
+                placeholder="Price Max (₱)"
                 className="bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm focus:border-gold focus:outline-none"
               />
             </div>

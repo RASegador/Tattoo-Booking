@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { sql } from './db';
+import { formatPHP } from './currency';
 
 let _resend: Resend | null = null;
 function getResendClient(): Resend | null {
@@ -85,6 +86,16 @@ function contactInfoLine(info: StudioInfo): string {
   return `<p style="color:rgba(255,255,255,0.6); font-size:13px;">Questions? Reach us at <a href="mailto:${info.contact_email}" style="color:#c9a24b; text-decoration:none;">${info.contact_email}</a> or ${info.contact_phone}.</p>`;
 }
 
+async function getDepositAmount(): Promise<number | null> {
+  try {
+    const rows = await sql`SELECT content FROM site_content WHERE section_key = ${'pricing'} LIMIT 1`;
+    const amount = (rows[0]?.content as { deposit_amount?: number } | undefined)?.deposit_amount;
+    return typeof amount === 'number' ? amount : null;
+  } catch {
+    return null;
+  }
+}
+
 function wrapper(title: string, bodyHtml: string): string {
   return `
   <div style="background-color:#050505; padding:32px 16px; font-family: 'Helvetica Neue', Arial, sans-serif;">
@@ -162,6 +173,7 @@ export async function sendBookingApprovedEmail(booking: BookingLike): Promise<Em
     const to = recipient(booking);
     if (!to) return { success: false, error: 'No recipient email on booking' };
     const studioInfo = await getStudioInfo();
+    const depositAmount = await getDepositAmount();
     const html = wrapper(
       'Appointment Confirmed',
       `<p>Hi ${name(booking)},</p>
@@ -177,7 +189,7 @@ export async function sendBookingApprovedEmail(booking: BookingLike): Promise<Em
       )}
       <p style="margin-top:20px; color:rgba(255,255,255,0.5); font-size:12px; letter-spacing:1px; text-transform:uppercase;">Preparation Instructions</p>
       <p>${studioInfo.prep_instructions}</p>
-      <p>Reminder: a non-refundable deposit secures your slot and is deducted from your final price on the day of your session.</p>
+      <p>Reminder: a non-refundable deposit${depositAmount != null ? ` of <strong style="color:#c9a24b;">${formatPHP(depositAmount)}</strong>` : ''} secures your slot and is deducted from your final price on the day of your session.</p>
       ${contactInfoLine(studioInfo)}`
     );
     const client = getResendClient();

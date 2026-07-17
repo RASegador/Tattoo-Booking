@@ -65,7 +65,7 @@ export default function FolderCard({
         <div className="flex items-start justify-between" style={{ transform: 'translateZ(40px)' }}>
           <span className="text-4xl drop-shadow-[0_0_12px_rgba(201,162,75,0.4)]">{category.icon}</span>
           <span className="text-[10px] tracking-[0.2em] uppercase text-white/30 group-hover:text-gold/70 transition-colors">
-            {category.count} pieces
+            {category.count ?? 0} pieces
           </span>
         </div>
 

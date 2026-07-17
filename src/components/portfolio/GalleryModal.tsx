@@ -14,10 +14,13 @@ export type GalleryArtwork = {
   placement: string;
   size: string;
   duration: string;
-  price: string;
+  price_min: number | null;
+  price_max: number | null;
   description: string;
   featured?: boolean;
   created_at?: string;
+  artist_id?: number | null;
+  artist_name?: string | null;
 };
 
 function isDataUrl(src: string) {
@@ -127,6 +130,7 @@ export default function GalleryModal({
                   <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                     <p className="text-sm font-display text-white">{art.title}</p>
                     <p className="text-xs text-gold/80 mt-1">{art.placement} · {art.duration}</p>
+                    {art.artist_name && <p className="text-[11px] text-white/50 mt-0.5">By {art.artist_name}</p>}
                   </div>
                 </div>
               </motion.button>

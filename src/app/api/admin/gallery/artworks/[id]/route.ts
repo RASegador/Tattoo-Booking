@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureSchema, sql, logActivity } from '@/lib/db';
 import { getSessionFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 type ArtworkRow = {
   id: number;
   category_slug: string;
@@ -10,9 +12,12 @@ type ArtworkRow = {
   placement: string;
   size: string;
   duration: string;
-  price: string;
+  price_min: number | null;
+  price_max: number | null;
   description: string;
   featured: boolean;
+  artist_id: number | null;
+  artist_name: string | null;
 };
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
@@ -35,6 +40,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Artwork not found' }, { status: 404 });
   }
 
+  // price_min/price_max/artist_id use "key present in body" rather than `?? existing`, since an
+  // explicit null (clearing a price bound, or unassigning the artist) is a valid value that `??`
+  // would otherwise silently overwrite with the existing value.
+  const nextPriceMin = 'price_min' in body ? body.price_min ?? null : existing.price_min;
+  const nextPriceMax = 'price_max' in body ? body.price_max ?? null : existing.price_max;
+  const nextArtistId = 'artist_id' in body ? body.artist_id ?? null : existing.artist_id;
+  const nextArtistName = 'artist_name' in body ? body.artist_name ?? '' : existing.artist_name;
+
   const updated = await sql`
     UPDATE artworks SET
       category_slug = ${body.category_slug ?? existing.category_slug},
@@ -43,9 +56,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       placement = ${body.placement ?? existing.placement},
       size = ${body.size ?? existing.size},
       duration = ${body.duration ?? existing.duration},
-      price = ${body.price ?? existing.price},
+      price_min = ${nextPriceMin},
+      price_max = ${nextPriceMax},
       description = ${body.description ?? existing.description},
-      featured = ${body.featured ?? existing.featured}
+      featured = ${body.featured ?? existing.featured},
+      artist_id = ${nextArtistId},
+      artist_name = ${nextArtistName}
     WHERE id = ${id}
     RETURNING *
   `;
