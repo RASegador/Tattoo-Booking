@@ -18,6 +18,7 @@ type ArtistRow = {
   available: boolean;
   availability_note: string;
   active: boolean;
+  featured: boolean;
   sort_order: number;
 };
 
@@ -56,6 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       available = ${body.available ?? existing.available},
       availability_note = ${body.availability_note ?? existing.availability_note},
       active = ${body.active ?? existing.active},
+      featured = ${body.featured ?? existing.featured},
       sort_order = ${body.sort_order ?? existing.sort_order}
     WHERE id = ${id}
     RETURNING *

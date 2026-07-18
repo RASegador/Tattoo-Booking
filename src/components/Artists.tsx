@@ -3,34 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import ArtistProfileModal, { type ModalArtist } from '@/components/artists/ArtistProfileModal';
 
-type Artist = {
-  id: number;
-  slug: string;
-  name: string;
-  bio: string;
-  photo_data: string;
-  specialties: string[];
-  years_experience: number | null;
-  instagram_url: string;
-  facebook_url: string;
-  tiktok_url: string;
-  available: boolean;
-  availability_note: string;
-};
+type Artist = ModalArtist;
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } },
 };
 
-function isDataUrl(src: string) {
-  return src.startsWith('data:');
-}
-
 export default function Artists() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,52 +61,74 @@ export default function Artists() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {artists.map((a, i) => (
-            <motion.div
+            <motion.button
               key={a.id}
+              type="button"
+              onClick={() => setActiveIndex(i)}
+              data-cursor-hover
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.08 }}
-              className="glass-panel rounded-xl p-6 text-center"
+              whileHover={{ y: -8 }}
+              className="group relative glass-panel rounded-xl overflow-hidden text-left border border-white/10 hover:border-gold/40 transition-colors duration-300 flex flex-col"
             >
-              <div className="relative w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border border-white/10">
+              <div className="relative aspect-[4/5] overflow-hidden">
                 {a.photo_data ? (
-                  isDataUrl(a.photo_data) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.photo_data} alt={a.name} className="w-full h-full object-cover" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.photo_data} alt={a.name} className="w-full h-full object-cover" />
-                  )
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={a.photo_data}
+                    alt={a.name}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  />
                 ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-2xl">🎨</div>
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-4xl">🎨</div>
                 )}
-              </div>
-              <p className="font-display text-xl">{a.name}</p>
-              {a.years_experience ? (
-                <p className="text-xs text-white/40 mt-1">{a.years_experience}+ years experience</p>
-              ) : null}
-              {a.specialties?.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-2 mt-4">
-                  {a.specialties.map((s) => (
-                    <span
-                      key={s}
-                      className="px-3 py-1 text-[10px] tracking-[0.1em] uppercase border border-white/15 text-white/60 rounded-full"
-                    >
-                      {s}
-                    </span>
-                  ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+
+                {a.featured && (
+                  <span className="absolute top-3 left-3 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
+                    ★ Featured Artist
+                  </span>
+                )}
+
+                <span
+                  className={`absolute top-3 right-3 px-2.5 py-1 text-[9px] uppercase tracking-wide rounded-full border backdrop-blur-sm ${
+                    a.available
+                      ? 'text-gold border-gold/40 bg-black/40'
+                      : 'text-white/50 border-white/20 bg-black/40'
+                  }`}
+                >
+                  {a.available ? 'Available' : 'Fully Booked'}
+                </span>
+
+                <div className="absolute bottom-0 inset-x-0 p-5">
+                  <p className="font-display text-xl">{a.name}</p>
+                  {a.years_experience ? (
+                    <p className="text-xs text-white/60 mt-0.5">{a.years_experience}+ years experience</p>
+                  ) : null}
                 </div>
-              )}
-              {a.bio && <p className="text-sm text-white/60 leading-relaxed mt-4 line-clamp-3">{a.bio}</p>}
-              <p
-                className={`text-xs mt-4 uppercase tracking-wide ${
-                  a.available ? 'text-gold' : 'text-white/40'
-                }`}
-              >
-                {a.available ? (a.availability_note || 'Currently accepting bookings') : 'Fully booked'}
-              </p>
-            </motion.div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col">
+                {a.specialties?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {a.specialties.slice(0, 3).map((s) => (
+                      <span
+                        key={s}
+                        className="px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase border border-white/15 text-white/60 rounded-full"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {a.bio && <p className="text-sm text-white/50 leading-relaxed line-clamp-2 mb-4">{a.bio}</p>}
+                <span className="mt-auto inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-gold group-hover:gap-3 transition-all">
+                  View Profile <span aria-hidden>→</span>
+                </span>
+              </div>
+            </motion.button>
           ))}
         </div>
 
@@ -135,6 +142,15 @@ export default function Artists() {
           </Link>
         </div>
       </div>
+
+      {activeIndex !== null && (
+        <ArtistProfileModal
+          artists={artists}
+          activeIndex={activeIndex}
+          onClose={() => setActiveIndex(null)}
+          onNavigate={(next) => setActiveIndex(next)}
+        />
+      )}
     </section>
   );
 }

@@ -8,10 +8,10 @@ export async function GET() {
     await ensureSchema();
     const artists = await sql`
       SELECT id, slug, name, bio, photo_data, specialties, years_experience,
-             instagram_url, facebook_url, tiktok_url, available, availability_note
+             instagram_url, facebook_url, tiktok_url, available, availability_note, featured
       FROM artists
       WHERE active = true
-      ORDER BY sort_order ASC, id ASC
+      ORDER BY featured DESC, sort_order ASC, id ASC
     `;
     return NextResponse.json({ artists });
   } catch {

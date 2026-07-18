@@ -159,6 +159,7 @@ export async function ensureSchema(): Promise<void> {
   await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS price_max numeric`;
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_id int REFERENCES artists(id) ON DELETE SET NULL`;
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_name text`;
+  await sql`ALTER TABLE artists ADD COLUMN IF NOT EXISTS featured boolean DEFAULT false`;
 
   await seedIfEmpty();
 
@@ -237,6 +238,172 @@ async function seedIfEmpty(): Promise<void> {
     }
 
     await sql`INSERT INTO site_content (section_key, content) VALUES ('gallery_v2_migrated', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+  }
+
+  // artists_v2 — one-time migration that (1) promotes Ralph Anthony Segador to Featured / Lead
+  // Artist with sort_order 0, and (2) seeds 3 additional sample artists with full profiles and
+  // their own portfolio artworks. Gated by a sentinel row, same pattern as gallery_v2_migrated,
+  // so it runs exactly once and never clobbers artist edits made afterward through the admin UI.
+  const artistsV2 = await sql`SELECT 1 FROM site_content WHERE section_key = ${'artists_v2_migrated'} LIMIT 1`;
+  if (artistsV2.length === 0) {
+    await sql`
+      UPDATE artists SET featured = true, sort_order = 0 WHERE slug = ${'ralph-anthony-segador'}
+    `;
+
+    const newArtists = [
+      {
+        slug: 'isabella-cruz',
+        name: 'Isabella Cruz',
+        bio: 'Isabella specializes in Japanese irezumi-influenced work and bold neo-traditional pieces, blending traditional motifs — koi, dragons, cherry blossoms — with a modern, illustrative edge. Her large-scale narrative pieces are built to age beautifully over decades. Trained under masters of the Japanese style, she brings meticulous linework and rich, saturated color to every session.',
+        photo: 'https://images.unsplash.com/photo-1506863530036-1efeddceb993?w=600&h=750&fit=crop&q=80',
+        specialties: ['Japanese', 'Neo Traditional'],
+        years: 7,
+        sortOrder: 10,
+        artworks: [
+          {
+            title: 'Crimson Dragon Sleeve',
+            image: 'https://images.unsplash.com/photo-1778837224447-8f3b265035eb?w=1000&h=1200&fit=crop&q=80',
+            category: 'japanese',
+            placement: 'Full Sleeve',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Cherry Blossom Elbow Wrap',
+            image: 'https://images.unsplash.com/photo-1635510236894-0c255ab893dc?w=1000&h=1200&fit=crop&q=80',
+            category: 'japanese',
+            placement: 'Elbow',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: 'Ember Dragon Forearm',
+            image: 'https://images.unsplash.com/photo-1721836300647-b70a83352c31?w=1000&h=1200&fit=crop&q=80',
+            category: 'neo-traditional',
+            placement: 'Forearm',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Botanical Neo-Traditional Sleeve',
+            image: 'https://images.unsplash.com/photo-1664234417152-cb8b88e544ad?w=1000&h=1200&fit=crop&q=80',
+            category: 'neo-traditional',
+            placement: 'Upper Arm',
+            size: 'Large (9-14 in)',
+          },
+        ],
+      },
+      {
+        slug: 'diego-mendoza',
+        name: 'Diego Mendoza',
+        bio: 'Diego is a precision fine-line specialist known for delicate single-needle work, minimalist compositions, and custom script and lettering. His steady hand and restrained, clean approach make him the go-to artist for clients who want a piece that says exactly enough — no more, no less. Every lettering commission is hand-lettered from scratch to match the client\'s story.',
+        photo: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?w=600&h=750&fit=crop&q=80',
+        specialties: ['Fine Line', 'Minimalist', 'Lettering'],
+        years: 5,
+        sortOrder: 20,
+        artworks: [
+          {
+            title: 'Fine Line Vine Wrap',
+            image: 'https://images.unsplash.com/photo-1649352508636-2d2efdb4c5b3?w=1000&h=1200&fit=crop&q=80',
+            category: 'fine-line',
+            placement: 'Forearm',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Minimalist Palette Icon',
+            image: 'https://images.unsplash.com/photo-1687825495498-1bb4c92dbb19?w=1000&h=1200&fit=crop&q=80',
+            category: 'minimalist',
+            placement: 'Upper Arm',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Shoulder Script & Ornament',
+            image: 'https://images.unsplash.com/photo-1602835644721-c5c063fe7f67?w=1000&h=1200&fit=crop&q=80',
+            category: 'lettering',
+            placement: 'Shoulder',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: '"Hope" Wrist Script',
+            image: 'https://images.unsplash.com/photo-1570168918437-5f25c140bd84?w=1000&h=1200&fit=crop&q=80',
+            category: 'lettering',
+            placement: 'Wrist',
+            size: 'Small (2-4 in)',
+          },
+        ],
+      },
+      {
+        slug: 'camille-dizon',
+        name: 'Camille Dizon',
+        bio: 'Camille creates vibrant botanical and floral color work alongside clean, precise geometric design. Her pieces balance painterly color blending with disciplined structure, whether she\'s building a full peony sleeve or a striking sacred-geometry back piece. Clients come to her for tattoos that feel like wearable art — bold, considered, and built to flatter the body\'s natural lines.',
+        photo: 'https://images.unsplash.com/photo-1532170579297-281918c8ae72?w=600&h=750&fit=crop&q=80',
+        specialties: ['Floral', 'Color Tattoos', 'Geometric'],
+        years: 6,
+        sortOrder: 30,
+        artworks: [
+          {
+            title: 'Peony Bloom Study',
+            image: 'https://images.unsplash.com/photo-1514470884303-0dd271e01df0?w=1000&h=1200&fit=crop&q=80',
+            category: 'floral',
+            placement: 'Shoulder',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Peony & Serpent Sleeve',
+            image: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=1000&h=1200&fit=crop&q=80',
+            category: 'floral',
+            placement: 'Upper Arm',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Geometric Arrow Line Forearm',
+            image: 'https://images.unsplash.com/photo-1656173877582-c7c017bff89e?w=1000&h=1200&fit=crop&q=80',
+            category: 'geometric',
+            placement: 'Forearm',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: 'Radiant Eye Back Piece',
+            image: 'https://images.unsplash.com/photo-1594812332797-bec39ee15b47?w=1000&h=1200&fit=crop&q=80',
+            category: 'geometric',
+            placement: 'Back',
+            size: 'Large (9-14 in)',
+          },
+        ],
+      },
+    ];
+
+    for (const a of newArtists) {
+      const inserted = await sql`
+        INSERT INTO artists (
+          slug, name, bio, photo_data, specialties, years_experience,
+          instagram_url, facebook_url, tiktok_url, available, availability_note,
+          active, featured, sort_order
+        )
+        VALUES (
+          ${a.slug}, ${a.name}, ${a.bio}, ${a.photo},
+          ${JSON.stringify(a.specialties)}::jsonb, ${a.years},
+          '', '', '', true, 'Currently accepting bookings',
+          true, false, ${a.sortOrder}
+        )
+        ON CONFLICT (slug) DO NOTHING
+        RETURNING id
+      `;
+      const artistId = inserted[0]?.id as number | undefined;
+      if (!artistId) continue;
+
+      for (const art of a.artworks) {
+        await sql`
+          INSERT INTO artworks (
+            category_slug, title, image_data, placement, size, duration,
+            price_min, price_max, description, artist_id, artist_name, featured
+          )
+          VALUES (
+            ${art.category}, ${art.title}, ${art.image}, ${art.placement}, ${art.size}, '3-5 hours',
+            ${3500}, ${12000}, ${`${art.title} by ${a.name}.`}, ${artistId}, ${a.name}, false
+          )
+        `;
+      }
+    }
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('artists_v2_migrated', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
   }
 
   // testimonials

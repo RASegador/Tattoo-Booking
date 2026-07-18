@@ -16,6 +16,7 @@ type Artist = {
   available: boolean;
   availability_note: string;
   active: boolean;
+  featured: boolean;
   sort_order: number;
 };
 
@@ -149,6 +150,7 @@ export default function AdminArtistsPage() {
 
   const handleToggleActive = (a: Artist) => patchArtist(a.id, { active: !a.active });
   const handleToggleAvailable = (a: Artist) => patchArtist(a.id, { available: !a.available });
+  const handleToggleFeatured = (a: Artist) => patchArtist(a.id, { featured: !a.featured });
 
   const handleSaveEdit = async (id: string) => {
     const ok = await patchArtist(id, editDraft);
@@ -313,6 +315,11 @@ export default function AdminArtistsPage() {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-display text-lg">{a.name}</p>
+                          {a.featured && (
+                            <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border text-gold border-gold/50 bg-gold/10">
+                              ★ Featured Artist
+                            </span>
+                          )}
                           <span
                             className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${
                               a.active ? 'text-cyan border-cyan/40 bg-cyan/10' : 'text-white/40 border-white/20 bg-white/5'
@@ -339,6 +346,17 @@ export default function AdminArtistsPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleToggleFeatured(a)}
+                        data-cursor-hover
+                        className={`px-3 py-1.5 text-xs uppercase border rounded-lg transition-colors ${
+                          a.featured
+                            ? 'border-gold text-gold bg-gold/10'
+                            : 'border-white/15 hover:border-gold hover:text-gold'
+                        }`}
+                      >
+                        {a.featured ? 'Unfeature' : 'Make Featured'}
+                      </button>
                       <button
                         onClick={() => handleToggleAvailable(a)}
                         data-cursor-hover

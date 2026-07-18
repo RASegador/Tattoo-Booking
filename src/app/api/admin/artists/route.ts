@@ -28,7 +28,7 @@ async function uniqueSlug(base: string): Promise<string> {
 
 export async function GET() {
   await ensureSchema();
-  const artists = await sql`SELECT * FROM artists ORDER BY sort_order ASC, id ASC`;
+  const artists = await sql`SELECT * FROM artists ORDER BY featured DESC, sort_order ASC, id ASC`;
   return NextResponse.json({ artists });
 }
 
@@ -45,6 +45,7 @@ type ArtistInput = {
   available?: boolean;
   availability_note?: string;
   active?: boolean;
+  featured?: boolean;
   sort_order?: number;
 };
 
@@ -68,13 +69,13 @@ export async function POST(req: NextRequest) {
   const rows = await sql`
     INSERT INTO artists (
       slug, name, bio, photo_data, specialties, years_experience,
-      instagram_url, facebook_url, tiktok_url, available, availability_note, active, sort_order
+      instagram_url, facebook_url, tiktok_url, available, availability_note, active, featured, sort_order
     )
     VALUES (
       ${slug}, ${body.name}, ${body.bio ?? ''}, ${body.photo_data ?? ''},
       ${JSON.stringify(body.specialties ?? [])}::jsonb, ${body.years_experience ?? null},
       ${body.instagram_url ?? ''}, ${body.facebook_url ?? ''}, ${body.tiktok_url ?? ''},
-      ${body.available ?? true}, ${body.availability_note ?? ''}, ${body.active ?? true}, ${body.sort_order ?? 0}
+      ${body.available ?? true}, ${body.availability_note ?? ''}, ${body.active ?? true}, ${body.featured ?? false}, ${body.sort_order ?? 0}
     )
     RETURNING *
   `;
