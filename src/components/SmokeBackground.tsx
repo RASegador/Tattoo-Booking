@@ -37,7 +37,12 @@ export default function SmokeBackground() {
       speedY: 0.15 + Math.random() * 0.35,
       speedX: (Math.random() - 0.5) * 0.2,
       alpha: 0.02 + Math.random() * 0.05,
-      hue: Math.random() > 0.85 ? 'crimson' : Math.random() > 0.9 ? 'cyan' : 'gold',
+      hue: (() => {
+        const r = Math.random();
+        if (r < 0.45) return 'crimson';
+        if (r < 0.9) return 'gold';
+        return 'cyan';
+      })(),
     }));
 
     let raf = 0;

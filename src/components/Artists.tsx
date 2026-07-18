@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import ArtistProfileModal, { type ModalArtist } from '@/components/artists/ArtistProfileModal';
+import { InkBottleIcon, StarIcon } from '@/components/icons/TattooIcons';
 
 type Artist = ModalArtist;
 
@@ -72,7 +73,7 @@ export default function Artists() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.08 }}
               whileHover={{ y: -8 }}
-              className="group relative glass-panel rounded-xl overflow-hidden text-left border border-white/10 hover:border-gold/40 transition-colors duration-300 flex flex-col"
+              className="card-hover-red group relative glass-panel rounded-xl overflow-hidden text-left border border-white/10 hover:border-crimson-light/50 transition-colors duration-300 flex flex-col"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 {a.photo_data ? (
@@ -84,13 +85,15 @@ export default function Artists() {
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                 ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-4xl">🎨</div>
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-crimson-light/60">
+                    <InkBottleIcon className="w-14 h-14" aria-hidden />
+                  </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
 
                 {a.featured && (
-                  <span className="absolute top-3 left-3 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
-                    ★ Featured Artist
+                  <span className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
+                    <StarIcon filled className="w-3 h-3" aria-hidden /> Featured Artist
                   </span>
                 )}
 
@@ -138,7 +141,7 @@ export default function Artists() {
           <Link
             href="/booking"
             data-cursor-hover
-            className="inline-block px-9 py-4 border border-gold text-gold text-sm tracking-[0.2em] uppercase hover:bg-gold hover:text-ink-black transition-colors duration-300"
+            className="glow-hover-red inline-block px-9 py-4 border border-crimson text-crimson-light text-sm tracking-[0.2em] uppercase hover:bg-crimson hover:text-white transition-colors duration-300"
           >
             Book With An Artist
           </Link>

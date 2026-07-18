@@ -1,11 +1,16 @@
 import Link from 'next/link';
+import { BarbedWireIcon, TattooMachineIcon } from '@/components/icons/TattooIcons';
 
 export default function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/10 bg-ink-charcoal/60">
+      <BarbedWireIcon className="w-full h-3 text-crimson/25" aria-hidden />
       <div className="mx-auto max-w-7xl px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
-          <p className="font-display text-lg tracking-[0.25em] text-gradient-gold mb-4">OBSIDIAN INK</p>
+          <p className="flex items-center gap-2 font-display text-lg tracking-[0.25em] text-gradient-gold mb-4">
+            <TattooMachineIcon className="w-4 h-4 text-crimson-light" aria-hidden />
+            OBSIDIAN INK
+          </p>
           <p className="text-sm text-white/50 leading-relaxed">
             A cinematic tattoo studio and digital gallery devoted to bold storytelling through ink.
           </p>

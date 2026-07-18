@@ -115,6 +115,76 @@ body {
   perspective: 1200px;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Red & Black redesign utilities                                         */
+/* ---------------------------------------------------------------------- */
+
+/* Concrete / brushed-metal grunge texture layer — sits behind section content */
+.grunge-texture {
+  background-image:
+    radial-gradient(ellipse at 15% 10%, rgba(179, 18, 46, 0.12), transparent 55%),
+    radial-gradient(ellipse at 85% 85%, rgba(179, 18, 46, 0.10), transparent 50%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 3px),
+    linear-gradient(180deg, #050505 0%, #0e0e10 50%, #050505 100%);
+}
+
+/* Blurred crimson smoke/ink blobs used behind hero/section content — always
+   low-opacity + heavily blurred so text contrast is never compromised. */
+.ink-splatter-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.ink-splatter-layer .blob {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(179, 18, 46, 0.35), rgba(179, 18, 46, 0) 70%);
+  filter: blur(80px);
+}
+
+/* Red glow interactive elements */
+.glow-hover-red {
+  transition: box-shadow 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+.glow-hover-red:hover {
+  box-shadow: 0 0 24px rgba(179, 18, 46, 0.45), 0 0 6px rgba(224, 25, 59, 0.5);
+}
+
+.card-hover-red {
+  transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s ease;
+}
+.card-hover-red:hover {
+  box-shadow: 0 14px 34px -12px rgba(179, 18, 46, 0.45), 0 2px 10px rgba(0, 0, 0, 0.5);
+  border-color: rgba(224, 25, 59, 0.45);
+}
+
+/* Animated pulsing border ring for primary CTAs */
+.btn-pulse-border {
+  position: relative;
+}
+.btn-pulse-border::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 1.5px solid rgba(224, 25, 59, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.btn-pulse-border:hover::after {
+  opacity: 1;
+  animation: borderGlowRed 1.8s ease-in-out infinite;
+}
+
+/* Ink-spreading loading animation */
+.ink-drop {
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(224, 25, 59, 0.9), rgba(179, 18, 46, 0.5) 60%, rgba(179, 18, 46, 0) 75%);
+}
+
 .tattoo-line {
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;

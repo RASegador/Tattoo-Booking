@@ -7,6 +7,14 @@ import Calendar from './Calendar';
 import { Booking, generateBookingId, saveBooking, TIME_SLOTS } from '@/lib/bookings';
 import { categories } from '@/lib/data';
 import { formatPHP } from '@/lib/currency';
+import {
+  AppointmentIcon,
+  CalendarIcon,
+  ClockIcon,
+  InkBottleIcon,
+  StarIcon,
+  UserIcon,
+} from '@/components/icons/TattooIcons';
 
 const STYLES = categories.map((c) => c.name);
 const SIZES = ['Small (2-4 in)', 'Medium (5-8 in)', 'Large (9-14 in)', 'Full Sleeve'];
@@ -256,7 +264,7 @@ export default function BookingWizard() {
     return (
       <div className="max-w-xl mx-auto text-center py-10">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-          <p className="text-6xl mb-6">✦</p>
+          <StarIcon filled className="w-16 h-16 text-crimson-light mx-auto mb-6 drop-shadow-[0_0_20px_rgba(179,18,46,0.6)]" aria-hidden />
           <h2 className="font-display text-3xl mb-3">Booking Request Received</h2>
           <p className="text-white/60 mb-8">
             Thank you, {submitted.fullName.split(' ')[0]}. Your request is <span className="text-gold">Pending</span> confirmation.
@@ -283,7 +291,7 @@ export default function BookingWizard() {
             <button
               onClick={() => { setSubmitted(null); setForm(initialState); setStep(0); }}
               data-cursor-hover
-              className="px-6 py-3 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-wide transition-colors"
+              className="btn-pulse-border glow-hover-red px-6 py-3 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-wide transition-colors shadow-glow-red"
             >
               Book Another Session
             </button>
@@ -394,9 +402,9 @@ export default function BookingWizard() {
                 <p className="text-white/50 text-sm mb-6">Optional — up to 6 images to help us understand your vision.</p>
                 <label
                   data-cursor-hover
-                  className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl py-12 cursor-pointer hover:border-gold/50 transition-colors"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-xl py-12 cursor-pointer hover:border-crimson-light/50 transition-colors"
                 >
-                  <span className="text-3xl mb-2">⬆</span>
+                  <InkBottleIcon className="w-8 h-8 text-crimson-light mb-2" aria-hidden />
                   <span className="text-sm text-white/60">Click to upload or drag files here</span>
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => handleFiles(e.target.files)} />
                 </label>
@@ -423,13 +431,17 @@ export default function BookingWizard() {
             )}
             {step === 6 && (
               <div>
-                <h3 className="font-display text-2xl mb-6">Choose Preferred Date</h3>
+                <h3 className="font-display text-2xl mb-6 flex items-center gap-3">
+                  <CalendarIcon className="w-6 h-6 text-crimson-light" aria-hidden /> Choose Preferred Date
+                </h3>
                 <Calendar selected={form.date} onSelect={(d) => setForm((f) => ({ ...f, date: d }))} />
               </div>
             )}
             {step === 7 && (
               <div>
-                <h3 className="font-display text-2xl mb-6">Select Available Time</h3>
+                <h3 className="font-display text-2xl mb-6 flex items-center gap-3">
+                  <ClockIcon className="w-6 h-6 text-crimson-light" aria-hidden /> Select Available Time
+                </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {TIME_SLOTS.map((t) => (
                     <button
@@ -450,7 +462,9 @@ export default function BookingWizard() {
             )}
             {step === 8 && (
               <div className="space-y-5">
-                <h3 className="font-display text-2xl mb-2">Your Contact Details</h3>
+                <h3 className="font-display text-2xl mb-2 flex items-center gap-3">
+                  <UserIcon className="w-6 h-6 text-crimson-light" aria-hidden /> Your Contact Details
+                </h3>
                 <div>
                   <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Full Name</label>
                   <input
@@ -490,7 +504,9 @@ export default function BookingWizard() {
             )}
             {step === 9 && (
               <div>
-                <h3 className="font-display text-2xl mb-6">Review Your Booking</h3>
+                <h3 className="font-display text-2xl mb-6 flex items-center gap-3">
+                  <AppointmentIcon className="w-6 h-6 text-crimson-light" aria-hidden /> Review Your Booking
+                </h3>
                 <div className="space-y-3 text-sm mb-6">
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Style</span><span>{form.style}</span></div>
                   <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-white/40">Size</span><span>{form.size}</span></div>
@@ -536,7 +552,7 @@ export default function BookingWizard() {
               onClick={next}
               disabled={!canProceed()}
               data-cursor-hover
-              className="px-8 py-3 bg-crimson hover:bg-crimson-light disabled:opacity-40 disabled:cursor-not-allowed text-sm uppercase tracking-wide transition-colors"
+              className="btn-pulse-border glow-hover-red px-8 py-3 bg-crimson hover:bg-crimson-light disabled:opacity-40 disabled:cursor-not-allowed text-sm uppercase tracking-wide transition-colors shadow-glow-red"
             >
               Continue →
             </button>

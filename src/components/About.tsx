@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { TribalPatternIcon } from '@/components/icons/TattooIcons';
 
 const stats = [
   { label: 'Years Combined Experience', value: '18+' },
@@ -79,7 +80,7 @@ export default function About() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink-black via-transparent to-transparent" />
           </div>
-          <div className="absolute -bottom-8 -right-8 glass-panel rounded-xl p-6 hidden sm:block">
+          <div className="card-hover-red absolute -bottom-8 -right-8 glass-panel rounded-xl p-6 hidden sm:block border border-crimson/20">
             <p className="font-display text-3xl text-gradient-gold">18+</p>
             <p className="text-xs tracking-[0.2em] uppercase text-white/50 mt-1">Years Combined Experience</p>
           </div>
@@ -113,7 +114,7 @@ export default function About() {
             {specialties.map((s) => (
               <span
                 key={s}
-                className="px-4 py-2 text-xs tracking-[0.15em] uppercase border border-white/15 text-white/70 rounded-full hover:border-gold hover:text-gold transition-colors"
+                className="px-4 py-2 text-xs tracking-[0.15em] uppercase border border-white/15 text-white/70 rounded-full hover:border-crimson-light hover:text-crimson-light transition-colors"
               >
                 {s}
               </span>
@@ -133,6 +134,7 @@ export default function About() {
         <p className="font-display text-2xl md:text-3xl leading-relaxed text-white/90">
           {philosophyQuote}
         </p>
+        <TribalPatternIcon className="w-40 h-4 text-crimson/35 mx-auto mt-8" aria-hidden />
       </motion.div>
     </section>
   );

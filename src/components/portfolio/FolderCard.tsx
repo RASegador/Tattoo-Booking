@@ -1,8 +1,34 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, type ComponentType } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import type { Category } from '@/lib/data';
+import {
+  DragonIcon,
+  InkBottleIcon,
+  NeedleIcon,
+  RoseIcon,
+  SkullIcon,
+  StencilPatternIcon,
+  ToriiIcon,
+  TribalMarkIcon,
+} from '@/components/icons/TattooIcons';
+import type { IconProps } from '@/components/icons/TattooIcons';
+
+const CATEGORY_ICONS: Record<string, ComponentType<IconProps>> = {
+  'black-grey': SkullIcon,
+  realism: DragonIcon,
+  traditional: NeedleIcon,
+  'neo-traditional': RoseIcon,
+  japanese: ToriiIcon,
+  tribal: TribalMarkIcon,
+  'fine-line': NeedleIcon,
+  minimalist: StencilPatternIcon,
+  lettering: NeedleIcon,
+  floral: RoseIcon,
+  geometric: StencilPatternIcon,
+  color: InkBottleIcon,
+};
 
 export default function FolderCard({
   category,
@@ -31,6 +57,8 @@ export default function FolderCard({
     my.set(0);
   };
 
+  const CategoryIcon = CATEGORY_ICONS[category.slug];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 60 }}
@@ -50,10 +78,10 @@ export default function FolderCard({
         transition={{ duration: 5 + (index % 3), repeat: Infinity, ease: 'easeInOut', delay: index * 0.2 }}
         whileHover={{ scale: 1.06, y: -14 }}
         whileTap={{ scale: 0.98 }}
-        className="group relative cursor-pointer rounded-2xl p-8 h-56 flex flex-col justify-between overflow-hidden glass-panel border border-white/10 hover:border-gold/60 transition-colors duration-300"
+        className="card-hover-red group relative cursor-pointer rounded-2xl p-8 h-56 flex flex-col justify-between overflow-hidden glass-panel border border-white/10 hover:border-crimson-light/50 transition-colors duration-300"
       >
         {/* glow */}
-        <div className="absolute -inset-1 bg-gradient-to-br from-gold/0 via-gold/0 to-crimson/0 group-hover:from-gold/10 group-hover:via-transparent group-hover:to-crimson/10 transition-all duration-500 pointer-events-none" />
+        <div className="absolute -inset-1 bg-gradient-to-br from-crimson/0 via-crimson/0 to-crimson/0 group-hover:from-crimson/15 group-hover:via-transparent group-hover:to-gold/10 transition-all duration-500 pointer-events-none" />
 
         {/* folder corner fold */}
         <motion.div
@@ -63,7 +91,11 @@ export default function FolderCard({
         />
 
         <div className="flex items-start justify-between" style={{ transform: 'translateZ(40px)' }}>
-          <span className="text-4xl drop-shadow-[0_0_12px_rgba(201,162,75,0.4)]">{category.icon}</span>
+          {CategoryIcon ? (
+            <CategoryIcon className="w-9 h-9 text-crimson-light drop-shadow-[0_0_10px_rgba(179,18,46,0.55)]" aria-hidden />
+          ) : (
+            <span className="text-4xl drop-shadow-[0_0_12px_rgba(201,162,75,0.4)]">{category.icon}</span>
+          )}
           <span className="text-[10px] tracking-[0.2em] uppercase text-white/30 group-hover:text-gold/70 transition-colors">
             {category.count ?? 0} pieces
           </span>
@@ -74,9 +106,9 @@ export default function FolderCard({
           <p className="text-xs text-white/40 mt-2 leading-relaxed">{category.description}</p>
         </div>
 
-        {/* floating icons on hover */}
+        {/* floating spark on hover */}
         <motion.span
-          className="absolute bottom-4 right-4 text-lg opacity-0 group-hover:opacity-70"
+          className="absolute bottom-4 right-4 text-lg text-crimson-light opacity-0 group-hover:opacity-70"
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >

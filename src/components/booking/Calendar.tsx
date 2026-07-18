@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { CalendarIcon } from '@/components/icons/TattooIcons';
 
 type BusinessHour = {
   id: number;
@@ -80,9 +81,12 @@ export default function Calendar({
   return (
     <div className="glass-panel rounded-xl p-6 border border-white/10">
       <div className="flex items-center justify-between mb-5">
-        <button type="button" onClick={() => changeMonth(-1)} data-cursor-hover className="text-white/50 hover:text-gold px-2">‹</button>
-        <p className="font-display text-lg">{MONTH_NAMES[viewMonth]} {viewYear}</p>
-        <button type="button" onClick={() => changeMonth(1)} data-cursor-hover className="text-white/50 hover:text-gold px-2">›</button>
+        <button type="button" onClick={() => changeMonth(-1)} data-cursor-hover className="text-white/50 hover:text-crimson-light px-2">‹</button>
+        <p className="font-display text-lg flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-crimson-light" aria-hidden />
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </p>
+        <button type="button" onClick={() => changeMonth(1)} data-cursor-hover className="text-white/50 hover:text-crimson-light px-2">›</button>
       </div>
       <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase tracking-wide text-white/40 mb-2">
         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => <span key={d}>{d}</span>)}
@@ -104,7 +108,7 @@ export default function Calendar({
               onClick={() => onSelect(dateStr)}
               data-cursor-hover
               className={`aspect-square rounded-lg text-sm flex items-center justify-center transition-all
-                ${disabled ? 'text-white/15 cursor-not-allowed line-through' : 'text-white/80 hover:bg-gold/20 hover:text-gold'}
+                ${disabled ? 'text-white/15 cursor-not-allowed line-through' : 'text-white/80 hover:bg-crimson/20 hover:text-crimson-light'}
                 ${isSelected ? 'bg-crimson text-white' : ''}
               `}
               title={fullyBooked ? 'Fully booked' : undefined}

@@ -50,7 +50,7 @@ export default function Faq() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: i * 0.05 }}
-              className="glass-panel rounded-xl overflow-hidden border border-white/10"
+              className="glass-panel rounded-xl overflow-hidden border border-white/10 hover:border-crimson/30 transition-colors duration-300"
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}

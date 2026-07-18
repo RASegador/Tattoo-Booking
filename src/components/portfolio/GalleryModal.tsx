@@ -107,7 +107,7 @@ export default function GalleryModal({
                 transition={{ duration: 0.5, delay: i * 0.05 }}
                 onClick={() => setViewerIndex(i)}
                 data-cursor-hover
-                className="group relative mb-5 w-full break-inside-avoid rounded-xl overflow-hidden block text-left"
+                className="card-hover-red group relative mb-5 w-full break-inside-avoid rounded-xl overflow-hidden block text-left border border-transparent"
               >
                 <div className="relative w-full" style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '1/1' : '4/5' }}>
                   {isDataUrl(art.image_data) ? (

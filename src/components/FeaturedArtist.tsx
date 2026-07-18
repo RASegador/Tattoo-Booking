@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { GalleryArtwork } from '@/components/portfolio/GalleryModal';
+import { ShieldIcon, StarIcon } from '@/components/icons/TattooIcons';
 
 type Artist = {
   id: number;
@@ -62,7 +63,10 @@ export default function FeaturedArtist() {
 
   return (
     <section id="featured-artist" className="relative py-32 px-6 overflow-hidden">
-      <div className="mx-auto max-w-7xl">
+      <div className="ink-splatter-layer">
+        <div className="blob w-[420px] h-[420px] -top-20 right-0" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-7xl">
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -93,8 +97,11 @@ export default function FeaturedArtist() {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink-black via-transparent to-transparent" />
-              <span className="absolute top-5 left-5 px-4 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
-                ★ Featured Artist
+              <span className="absolute top-5 left-5 flex items-center gap-1.5 px-4 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
+                <StarIcon filled className="w-3.5 h-3.5" aria-hidden /> Featured Artist
+              </span>
+              <span className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-crimson-light/60 text-crimson-light bg-black/50 backdrop-blur-sm shadow-glow-red">
+                <ShieldIcon className="w-3.5 h-3.5" aria-hidden /> Verified
               </span>
             </div>
           </motion.div>
@@ -134,7 +141,7 @@ export default function FeaturedArtist() {
             <Link
               href="/booking"
               data-cursor-hover
-              className="inline-block px-9 py-4 bg-crimson hover:bg-crimson-light text-sm tracking-[0.2em] uppercase transition-colors duration-300 rounded-lg"
+              className="btn-pulse-border glow-hover-red inline-block px-9 py-4 bg-crimson hover:bg-crimson-light text-sm tracking-[0.2em] uppercase transition-colors duration-300 rounded-lg shadow-glow-red"
             >
               Book With {artist.name.split(' ')[0]} {artist.name.split(' ')[1] || ''}
             </Link>

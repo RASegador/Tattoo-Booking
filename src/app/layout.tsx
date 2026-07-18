@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', weight: ['30
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ink-tells-your-story.vercel.app'),
-  title: 'Obsidian Ink Studio â€” Premium Custom Tattoo Art & Booking',
+  title: 'Obsidian Ink Studio — Premium Custom Tattoo Art & Booking',
   description:
     'Obsidian Ink Studio is a high-end tattoo gallery and booking experience. Explore black & grey, realism, anime, traditional, fine line, minimalist, cover-up, and custom tattoo portfolios, then book your session online.',
   keywords: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     'cover up tattoo',
   ],
   openGraph: {
-    title: 'Obsidian Ink Studio â€” Ink That Tells Your Story',
+    title: 'Obsidian Ink Studio — Ink That Tells Your Story',
     description: 'A cinematic digital gallery and booking experience for premium custom tattoo art.',
     type: 'website',
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${inter.variable}`}>
-      <body className="font-body antialiased bg-ink-black text-white overflow-x-hidden">
+      <body className="grunge-texture font-body antialiased text-white overflow-x-hidden">
         <LoaderIntro />
         <CustomCursor />
         <SmokeBackground />

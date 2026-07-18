@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { categories as fallbackCategories, type Category } from '@/lib/data';
 import FolderCard from './FolderCard';
 import GalleryModal from './GalleryModal';
+import { StencilPatternIcon } from '@/components/icons/TattooIcons';
 
 export default function PortfolioSection() {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
@@ -36,8 +37,9 @@ export default function PortfolioSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.7 }}
-          className="text-center mb-16"
+          className="relative text-center mb-16"
         >
+          <StencilPatternIcon className="w-10 h-10 text-crimson/30 mx-auto mb-4" aria-hidden />
           <p className="text-xs tracking-[0.4em] uppercase text-gold/80 mb-4">The Gallery</p>
           <h2 className="font-display text-4xl md:text-5xl">
             An Archive of <span className="text-gradient-gold">Living Art</span>

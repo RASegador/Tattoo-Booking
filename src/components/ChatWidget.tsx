@@ -9,10 +9,10 @@ type ChatMessage = {
 };
 
 const GREETING =
-  "Hi, I'm Ink â€” the studio's virtual assistant. Ask me about styles, pricing, aftercare, or I can help estimate a quote for your next piece.";
+  "Hi, I'm Ink — the studio's virtual assistant. Ask me about styles, pricing, aftercare, or I can help estimate a quote for your next piece.";
 
 const UNAVAILABLE_MESSAGE =
-  "Live chat isn't available right now â€” email ralph.segador03@gmail.com or call 0994 147 5924 and we'll help directly.";
+  "Live chat isn't available right now — email ralph.segador03@gmail.com or call 0994 147 5924 and we'll help directly.";
 
 const QUICK_REPLIES = ['Get a quote', 'Aftercare tips', 'Book an appointment', 'Studio hours'];
 
@@ -100,7 +100,7 @@ export default function ChatWidget() {
       if (!res.ok) {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: "Something went wrong on my end â€” please try again in a moment." },
+          { role: 'assistant', content: "Something went wrong on my end — please try again in a moment." },
         ]);
         return;
       }
@@ -108,7 +108,7 @@ export default function ChatWidget() {
       const data = (await res.json()) as { reply?: string };
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.reply || "I'm not sure how to respond to that â€” could you rephrase?" },
+        { role: 'assistant', content: data.reply || "I'm not sure how to respond to that — could you rephrase?" },
       ]);
     } catch {
       setMessages((prev) => [
@@ -162,7 +162,7 @@ export default function ChatWidget() {
         transition={{ duration: 0.4, ease: 'easeOut', delay: 0.6 }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
-        className="fixed bottom-6 right-6 z-[9000] flex h-14 w-14 items-center justify-center rounded-full border border-gold/60 bg-ink-charcoal text-gold shadow-[0_0_25px_rgba(201,162,75,0.25)]"
+        className="fixed bottom-6 right-6 z-[9000] flex h-14 w-14 items-center justify-center rounded-full border border-crimson/60 bg-ink-charcoal text-crimson-light shadow-glow-red animate-pulseGlowRed"
       >
         {open ? <CloseIcon /> : <ChatIcon />}
       </motion.button>
@@ -272,7 +272,7 @@ export default function ChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={unavailable}
-                placeholder={unavailable ? 'Chat unavailable' : 'Ask about styles, pricing, aftercareâ€¦'}
+                placeholder={unavailable ? 'Chat unavailable' : 'Ask about styles, pricing, aftercare…'}
                 rows={1}
                 className="flex-1 resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-gold/50 disabled:opacity-40"
               />

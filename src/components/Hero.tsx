@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { BarbedWireIcon, InkSplatterIcon } from '@/components/icons/TattooIcons';
 
 export default function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const parallaxOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
+
   const [eyebrow, setEyebrow] = useState('Obsidian Ink Studio');
   const [headlineLine1, setHeadlineLine1] = useState('Ink That Tells');
   const [headlineLine2Gold, setHeadlineLine2Gold] = useState('Your Story');
@@ -35,10 +41,21 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6">
-      <div className="absolute inset-0 -z-10">
+    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden px-6">
+      <motion.div className="absolute inset-0 -z-10" style={{ y: parallaxY, opacity: parallaxOpacity }}>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink-black/40 to-ink-black" />
-      </div>
+        <div className="ink-splatter-layer">
+          <InkSplatterIcon
+            variant={1}
+            className="absolute -top-24 -left-16 w-[520px] h-[520px] text-crimson/25 blur-[70px] animate-parallaxDrift"
+          />
+          <InkSplatterIcon
+            variant={2}
+            className="absolute bottom-0 right-0 w-[460px] h-[460px] text-crimson/20 blur-[80px] animate-parallaxDrift"
+            style={{ animationDelay: '3s' }}
+          />
+        </div>
+      </motion.div>
 
       <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.p
@@ -79,7 +96,7 @@ export default function Hero() {
           <Link
             href="/booking"
             data-cursor-hover
-            className="group relative px-9 py-4 bg-crimson text-white text-sm tracking-[0.2em] uppercase overflow-hidden"
+            className="btn-pulse-border glow-hover-red group relative px-9 py-4 bg-crimson text-white text-sm tracking-[0.2em] uppercase overflow-hidden rounded-sm shadow-glow-red"
           >
             <span className="relative z-10">Book Appointment</span>
             <span className="absolute inset-0 bg-crimson-light translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -100,6 +117,7 @@ export default function Hero() {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
+        <BarbedWireIcon className="w-16 h-3 text-crimson/40" aria-hidden />
         <span className="text-[10px] tracking-[0.3em] uppercase text-white/40">Scroll</span>
         <motion.div
           animate={{ y: [0, 10, 0] }}

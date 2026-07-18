@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { formatPHPRange } from '@/lib/currency';
 import type { GalleryArtwork } from '@/components/portfolio/GalleryModal';
+import { StarIcon } from '@/components/icons/TattooIcons';
 
 export type ModalArtist = {
   id: number;
@@ -155,8 +156,8 @@ export default function ArtistProfileModal({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink-charcoal via-transparent to-transparent md:bg-gradient-to-r" />
               {artist.featured && (
-                <span className="absolute top-4 left-4 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
-                  ★ Featured Artist
+                <span className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
+                  <StarIcon filled className="w-3 h-3" aria-hidden /> Featured Artist
                 </span>
               )}
             </div>
@@ -259,7 +260,7 @@ export default function ArtistProfileModal({
               <Link
                 href="/booking"
                 data-cursor-hover
-                className="inline-block px-8 py-3.5 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-[0.15em] transition-colors duration-300 rounded-lg"
+                className="btn-pulse-border glow-hover-red inline-block px-8 py-3.5 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-[0.15em] transition-colors duration-300 rounded-lg shadow-glow-red"
               >
                 Book This Artist
               </Link>
