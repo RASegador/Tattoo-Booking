@@ -1,7 +1,25 @@
 import { neon } from '@neondatabase/serverless';
 import { categories as seedCategories, getArtworksForCategory } from './data';
 
-export const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || '');
+// fetchOptions: { cache: 'no-store' } is required here — this driver issues its queries as HTTP
+// fetch() calls under the hood, and without this, responses were observed being served from a
+// stale cache within a warm serverless instance: repeated INSERT/PUT calls committed real rows
+// (confirmed via RETURNING *, real incrementing ids), yet subsequent SELECTs on the same
+// container kept returning the same stale result set indefinitely, never seeing the new rows.
+// This explains both the earlier "admin bookings only shows 1 row" bug and the "most recently
+// written site_content row is missing" bug — both are the same root cause, not the bound-
+// parameter issue they were first (incorrectly) attributed to.
+// Falls back to a syntactically-valid (but non-functional) placeholder connection string when
+// DATABASE_URL/POSTGRES_URL isn't set. The neon() constructor validates its argument's format
+// eagerly and throws on an empty string — that crash was killing `next build` locally (and any
+// build environment without the env var configured) during Next's "collect page data" step,
+// which imports every route module just to inspect its exports, even though none of these are
+// statically executed at build time (all routes here are `force-dynamic`). Production on Vercel
+// always has the real DATABASE_URL set, so this fallback is never actually used for queries.
+export const sql = neon(
+  process.env.DATABASE_URL || process.env.POSTGRES_URL || 'postgres://user:pass@localhost:5432/db',
+  { fetchOptions: { cache: 'no-store' } }
+);
 
 let schemaEnsured = false;
 
@@ -149,6 +167,7 @@ export async function ensureSchema(): Promise<void> {
   await sql`ALTER TABLE artworks ADD COLUMN IF NOT EXISTS price_max numeric`;
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_id int REFERENCES artists(id) ON DELETE SET NULL`;
   await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS artist_name text`;
+  await sql`ALTER TABLE artists ADD COLUMN IF NOT EXISTS featured boolean DEFAULT false`;
 
   await seedIfEmpty();
 
@@ -190,9 +209,17 @@ async function seedIfEmpty(): Promise<void> {
     `;
   }
 
-  // gallery_categories + artworks
-  const catCount = await sql`SELECT count(*)::int AS c FROM gallery_categories`;
-  if (Number(catCount[0]?.c ?? 0) === 0) {
+  // gallery_categories + artworks — one-time migration to the 12-category spec with real
+  // (Unsplash) sample images and structured PHP pricing, gated by a sentinel row so it runs
+  // exactly once and never clobbers artwork edits made afterward through the admin gallery UI.
+  const galleryV2 = await sql`SELECT 1 FROM site_content WHERE section_key = ${'gallery_v2_migrated'} LIMIT 1`;
+  if (galleryV2.length === 0) {
+    // Categories dropped per the client's 12-category spec — cascades to their old artworks.
+    await sql`DELETE FROM gallery_categories WHERE slug IN ('anime', 'cover-ups', 'custom')`;
+
+    const primaryArtistRows = await sql`SELECT id, name FROM artists ORDER BY sort_order ASC, id ASC LIMIT 1`;
+    const primaryArtist = primaryArtistRows[0] as { id: number; name: string } | undefined;
+
     for (let i = 0; i < seedCategories.length; i++) {
       const cat = seedCategories[i];
       await sql`
@@ -200,15 +227,191 @@ async function seedIfEmpty(): Promise<void> {
         VALUES (${cat.slug}, ${cat.name}, ${cat.icon}, ${cat.description}, ${i})
         ON CONFLICT (slug) DO NOTHING
       `;
+      // Replace any old placeholder artworks (picsum images, free-text USD price) for this
+      // category with the new curated real-image, PHP-priced set.
+      await sql`DELETE FROM artworks WHERE category_slug = ${cat.slug}`;
       const artworks = getArtworksForCategory(cat.slug);
       for (const art of artworks) {
-        const imageUrl = `https://picsum.photos/seed/${art.seed}/700/900`;
         await sql`
-          INSERT INTO artworks (category_slug, title, image_data, placement, size, duration, price, description, featured)
-          VALUES (${cat.slug}, ${art.title}, ${imageUrl}, ${art.placement}, ${art.size}, ${art.duration}, ${art.price}, ${art.description}, false)
+          INSERT INTO artworks (
+            category_slug, title, image_data, placement, size, duration,
+            price_min, price_max, description, artist_id, artist_name, featured
+          )
+          VALUES (
+            ${cat.slug}, ${art.title}, ${art.imageUrl}, ${art.placement}, ${art.size}, ${art.duration},
+            ${art.priceMin}, ${art.priceMax}, ${art.description}, ${primaryArtist?.id ?? null}, ${primaryArtist?.name ?? ''}, false
+          )
         `;
       }
     }
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('gallery_v2_migrated', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+  }
+
+  // artists_v2 — one-time migration that (1) promotes Ralph Anthony Segador to Featured / Lead
+  // Artist with sort_order 0, and (2) seeds 3 additional sample artists with full profiles and
+  // their own portfolio artworks. Gated by a sentinel row, same pattern as gallery_v2_migrated,
+  // so it runs exactly once and never clobbers artist edits made afterward through the admin UI.
+  const artistsV2 = await sql`SELECT 1 FROM site_content WHERE section_key = ${'artists_v2_migrated'} LIMIT 1`;
+  if (artistsV2.length === 0) {
+    await sql`
+      UPDATE artists SET featured = true, sort_order = 0 WHERE slug = ${'ralph-anthony-segador'}
+    `;
+
+    const newArtists = [
+      {
+        slug: 'isabella-cruz',
+        name: 'Isabella Cruz',
+        bio: 'Isabella specializes in Japanese irezumi-influenced work and bold neo-traditional pieces, blending traditional motifs — koi, dragons, cherry blossoms — with a modern, illustrative edge. Her large-scale narrative pieces are built to age beautifully over decades. Trained under masters of the Japanese style, she brings meticulous linework and rich, saturated color to every session.',
+        photo: 'https://images.unsplash.com/photo-1506863530036-1efeddceb993?w=600&h=750&fit=crop&q=80',
+        specialties: ['Japanese', 'Neo Traditional'],
+        years: 7,
+        sortOrder: 10,
+        artworks: [
+          {
+            title: 'Crimson Dragon Sleeve',
+            image: 'https://images.unsplash.com/photo-1778837224447-8f3b265035eb?w=1000&h=1200&fit=crop&q=80',
+            category: 'japanese',
+            placement: 'Full Sleeve',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Cherry Blossom Elbow Wrap',
+            image: 'https://images.unsplash.com/photo-1635510236894-0c255ab893dc?w=1000&h=1200&fit=crop&q=80',
+            category: 'japanese',
+            placement: 'Elbow',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: 'Ember Dragon Forearm',
+            image: 'https://images.unsplash.com/photo-1721836300647-b70a83352c31?w=1000&h=1200&fit=crop&q=80',
+            category: 'neo-traditional',
+            placement: 'Forearm',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Botanical Neo-Traditional Sleeve',
+            image: 'https://images.unsplash.com/photo-1664234417152-cb8b88e544ad?w=1000&h=1200&fit=crop&q=80',
+            category: 'neo-traditional',
+            placement: 'Upper Arm',
+            size: 'Large (9-14 in)',
+          },
+        ],
+      },
+      {
+        slug: 'diego-mendoza',
+        name: 'Diego Mendoza',
+        bio: 'Diego is a precision fine-line specialist known for delicate single-needle work, minimalist compositions, and custom script and lettering. His steady hand and restrained, clean approach make him the go-to artist for clients who want a piece that says exactly enough — no more, no less. Every lettering commission is hand-lettered from scratch to match the client\'s story.',
+        photo: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?w=600&h=750&fit=crop&q=80',
+        specialties: ['Fine Line', 'Minimalist', 'Lettering'],
+        years: 5,
+        sortOrder: 20,
+        artworks: [
+          {
+            title: 'Fine Line Vine Wrap',
+            image: 'https://images.unsplash.com/photo-1649352508636-2d2efdb4c5b3?w=1000&h=1200&fit=crop&q=80',
+            category: 'fine-line',
+            placement: 'Forearm',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Minimalist Palette Icon',
+            image: 'https://images.unsplash.com/photo-1687825495498-1bb4c92dbb19?w=1000&h=1200&fit=crop&q=80',
+            category: 'minimalist',
+            placement: 'Upper Arm',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Shoulder Script & Ornament',
+            image: 'https://images.unsplash.com/photo-1602835644721-c5c063fe7f67?w=1000&h=1200&fit=crop&q=80',
+            category: 'lettering',
+            placement: 'Shoulder',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: '"Hope" Wrist Script',
+            image: 'https://images.unsplash.com/photo-1570168918437-5f25c140bd84?w=1000&h=1200&fit=crop&q=80',
+            category: 'lettering',
+            placement: 'Wrist',
+            size: 'Small (2-4 in)',
+          },
+        ],
+      },
+      {
+        slug: 'camille-dizon',
+        name: 'Camille Dizon',
+        bio: 'Camille creates vibrant botanical and floral color work alongside clean, precise geometric design. Her pieces balance painterly color blending with disciplined structure, whether she\'s building a full peony sleeve or a striking sacred-geometry back piece. Clients come to her for tattoos that feel like wearable art — bold, considered, and built to flatter the body\'s natural lines.',
+        photo: 'https://images.unsplash.com/photo-1532170579297-281918c8ae72?w=600&h=750&fit=crop&q=80',
+        specialties: ['Floral', 'Color Tattoos', 'Geometric'],
+        years: 6,
+        sortOrder: 30,
+        artworks: [
+          {
+            title: 'Peony Bloom Study',
+            image: 'https://images.unsplash.com/photo-1514470884303-0dd271e01df0?w=1000&h=1200&fit=crop&q=80',
+            category: 'floral',
+            placement: 'Shoulder',
+            size: 'Small (2-4 in)',
+          },
+          {
+            title: 'Peony & Serpent Sleeve',
+            image: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=1000&h=1200&fit=crop&q=80',
+            category: 'floral',
+            placement: 'Upper Arm',
+            size: 'Large (9-14 in)',
+          },
+          {
+            title: 'Geometric Arrow Line Forearm',
+            image: 'https://images.unsplash.com/photo-1656173877582-c7c017bff89e?w=1000&h=1200&fit=crop&q=80',
+            category: 'geometric',
+            placement: 'Forearm',
+            size: 'Medium (5-8 in)',
+          },
+          {
+            title: 'Radiant Eye Back Piece',
+            image: 'https://images.unsplash.com/photo-1594812332797-bec39ee15b47?w=1000&h=1200&fit=crop&q=80',
+            category: 'geometric',
+            placement: 'Back',
+            size: 'Large (9-14 in)',
+          },
+        ],
+      },
+    ];
+
+    for (const a of newArtists) {
+      const inserted = await sql`
+        INSERT INTO artists (
+          slug, name, bio, photo_data, specialties, years_experience,
+          instagram_url, facebook_url, tiktok_url, available, availability_note,
+          active, featured, sort_order
+        )
+        VALUES (
+          ${a.slug}, ${a.name}, ${a.bio}, ${a.photo},
+          ${JSON.stringify(a.specialties)}::jsonb, ${a.years},
+          '', '', '', true, 'Currently accepting bookings',
+          true, false, ${a.sortOrder}
+        )
+        ON CONFLICT (slug) DO NOTHING
+        RETURNING id
+      `;
+      const artistId = inserted[0]?.id as number | undefined;
+      if (!artistId) continue;
+
+      for (const art of a.artworks) {
+        await sql`
+          INSERT INTO artworks (
+            category_slug, title, image_data, placement, size, duration,
+            price_min, price_max, description, artist_id, artist_name, featured
+          )
+          VALUES (
+            ${art.category}, ${art.title}, ${art.image}, ${art.placement}, ${art.size}, '3-5 hours',
+            ${3500}, ${12000}, ${`${art.title} by ${a.name}.`}, ${artistId}, ${a.name}, false
+          )
+        `;
+      }
+    }
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('artists_v2_migrated', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
   }
 
   // testimonials — intentionally NOT seeded with placeholder reviews.
@@ -250,6 +453,64 @@ async function seedIfEmpty(): Promise<void> {
     await sql`INSERT INTO site_content (section_key, content) VALUES ('about', ${JSON.stringify(aboutContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
     await sql`INSERT INTO site_content (section_key, content) VALUES ('contact', ${JSON.stringify(contactContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
     await sql`INSERT INTO site_content (section_key, content) VALUES ('faq', ${JSON.stringify(faqs)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+  }
+
+  // studio_info — additive, independent of the "site_content totally empty" gate above,
+  // since production's site_content table is already seeded (hero/about/contact/faq exist).
+  // ON CONFLICT DO NOTHING makes this safe to run on every ensureSchema() call.
+  const studioInfoContent = {
+    address: 'San Vicente, Camarines Norte, Philippines',
+    prep_instructions:
+      "Please arrive well-rested and hydrated, and eat a solid meal beforehand. Avoid alcohol and blood-thinning medication for at least 24 hours prior to your session, and wear comfortable clothing that allows easy access to the tattoo placement area.",
+    contact_email: 'ralph.segador03@gmail.com',
+    contact_phone: '0994 147 5924',
+  };
+  await sql`INSERT INTO site_content (section_key, content) VALUES ('studio_info', ${JSON.stringify(studioInfoContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+
+  // pricing — same additive pattern as studio_info above.
+  const pricingContent = {
+    deposit_amount: 2000,
+    starting_price_note: 'Small minimalist pieces start around ₱2,500. Large-scale custom or realism work is quoted per session after a consultation.',
+  };
+  await sql`INSERT INTO site_content (section_key, content) VALUES ('pricing', ${JSON.stringify(pricingContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+
+  // ralph_removed_v1 — one-time migration that removes Ralph Anthony Segador entirely as an
+  // artist (per explicit client request), promotes Isabella Cruz to Featured/Lead Artist in his
+  // place, strips his attribution from any artworks previously credited to him (leaving them
+  // unattributed rather than misattributing them to another artist), and rewrites the homepage
+  // About section from a personal founder bio to a studio-wide bio. Gated by a sentinel row,
+  // same pattern as the other _v1/_v2 migrations above, so it runs exactly once.
+  const ralphRemoved = await sql`SELECT 1 FROM site_content WHERE section_key = ${'ralph_removed_v1'} LIMIT 1`;
+  if (ralphRemoved.length === 0) {
+    const ralphRows = await sql`SELECT id FROM artists WHERE slug = ${'ralph-anthony-segador'} LIMIT 1`;
+    const ralphId = (ralphRows[0] as { id: number } | undefined)?.id;
+
+    if (ralphId) {
+      await sql`UPDATE artworks SET artist_id = NULL, artist_name = NULL WHERE artist_id = ${ralphId}`;
+      await sql`DELETE FROM artists WHERE id = ${ralphId}`;
+    }
+
+    await sql`UPDATE artists SET featured = true, sort_order = 0 WHERE slug = ${'isabella-cruz'}`;
+
+    const studioAboutContent = {
+      eyebrow: 'The Studio',
+      heading_plain: 'Where Fine Art Meets',
+      heading_gold: 'Permanent Craft',
+      artist_line: 'A Collective of Resident Tattoo Artists',
+      bio1:
+        'Obsidian Ink Studio was founded on a simple belief — a tattoo should be treated as fine art, not a transaction. Every client begins with a private consultation where we translate your story, memory, or vision into a piece built exclusively for your skin.',
+      bio2:
+        'Our resident artists trained across traditional Japanese, American, and European studios, bringing decades of combined technique to a modern, gallery-grade studio environment — hospital-level sterilization, premium pigments, and an atmosphere designed to feel more like an art residency than a shop.',
+      philosophy_quote:
+        'A tattoo is not decoration. It is a permanent conversation between memory, identity, and skin — and every conversation deserves an artist who listens first.',
+    };
+    await sql`
+      INSERT INTO site_content (section_key, content, updated_at)
+      VALUES ('about', ${JSON.stringify(studioAboutContent)}::jsonb, now())
+      ON CONFLICT (section_key) DO UPDATE SET content = EXCLUDED.content, updated_at = now()
+    `;
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('ralph_removed_v1', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
   }
 }
 
