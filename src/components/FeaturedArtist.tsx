@@ -97,7 +97,7 @@ export default function FeaturedArtist() {
             <h3 className="font-display text-3xl md:text-4xl mb-4">{artist.name}</h3>
             {artist.years_experience ? (
               <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-6">
-                {artist.years_experience}+ Years Experience · Founder &amp; Lead Artist
+                {artist.years_experience}+ Years Experience · Lead Tattoo Artist
               </p>
             ) : null}
             <p className="text-white/60 leading-relaxed mb-6">{artist.bio}</p>

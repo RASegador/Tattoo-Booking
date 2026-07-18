@@ -473,6 +473,45 @@ async function seedIfEmpty(): Promise<void> {
     starting_price_note: 'Small minimalist pieces start around ₱2,500. Large-scale custom or realism work is quoted per session after a consultation.',
   };
   await sql`INSERT INTO site_content (section_key, content) VALUES ('pricing', ${JSON.stringify(pricingContent)}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+
+  // ralph_removed_v1 — one-time migration that removes Ralph Anthony Segador entirely as an
+  // artist (per explicit client request), promotes Isabella Cruz to Featured/Lead Artist in his
+  // place, strips his attribution from any artworks previously credited to him (leaving them
+  // unattributed rather than misattributing them to another artist), and rewrites the homepage
+  // About section from a personal founder bio to a studio-wide bio. Gated by a sentinel row,
+  // same pattern as the other _v1/_v2 migrations above, so it runs exactly once.
+  const ralphRemoved = await sql`SELECT 1 FROM site_content WHERE section_key = ${'ralph_removed_v1'} LIMIT 1`;
+  if (ralphRemoved.length === 0) {
+    const ralphRows = await sql`SELECT id FROM artists WHERE slug = ${'ralph-anthony-segador'} LIMIT 1`;
+    const ralphId = (ralphRows[0] as { id: number } | undefined)?.id;
+
+    if (ralphId) {
+      await sql`UPDATE artworks SET artist_id = NULL, artist_name = NULL WHERE artist_id = ${ralphId}`;
+      await sql`DELETE FROM artists WHERE id = ${ralphId}`;
+    }
+
+    await sql`UPDATE artists SET featured = true, sort_order = 0 WHERE slug = ${'isabella-cruz'}`;
+
+    const studioAboutContent = {
+      eyebrow: 'The Studio',
+      heading_plain: 'Where Fine Art Meets',
+      heading_gold: 'Permanent Craft',
+      artist_line: 'A Collective of Resident Tattoo Artists',
+      bio1:
+        'Obsidian Ink Studio was founded on a simple belief — a tattoo should be treated as fine art, not a transaction. Every client begins with a private consultation where we translate your story, memory, or vision into a piece built exclusively for your skin.',
+      bio2:
+        'Our resident artists trained across traditional Japanese, American, and European studios, bringing decades of combined technique to a modern, gallery-grade studio environment — hospital-level sterilization, premium pigments, and an atmosphere designed to feel more like an art residency than a shop.',
+      philosophy_quote:
+        'A tattoo is not decoration. It is a permanent conversation between memory, identity, and skin — and every conversation deserves an artist who listens first.',
+    };
+    await sql`
+      INSERT INTO site_content (section_key, content, updated_at)
+      VALUES ('about', ${JSON.stringify(studioAboutContent)}::jsonb, now())
+      ON CONFLICT (section_key) DO UPDATE SET content = EXCLUDED.content, updated_at = now()
+    `;
+
+    await sql`INSERT INTO site_content (section_key, content) VALUES ('ralph_removed_v1', ${JSON.stringify({ migrated: true })}::jsonb) ON CONFLICT (section_key) DO NOTHING`;
+  }
 }
 
 export async function logActivity(adminEmail: string | null | undefined, action: string, details: string): Promise<void> {

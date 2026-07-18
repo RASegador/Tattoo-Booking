@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 const stats = [
-  { label: 'Years of Experience', value: '14+' },
+  { label: 'Years Combined Experience', value: '18+' },
   { label: 'Pieces Completed', value: '3,200+' },
   { label: 'Awards Won', value: '9' },
   { label: 'Certifications', value: '6' },
@@ -22,12 +22,12 @@ export default function About() {
   const [eyebrow, setEyebrow] = useState('The Studio');
   const [headingPlain, setHeadingPlain] = useState('Where Fine Art Meets');
   const [headingGold, setHeadingGold] = useState('Permanent Craft');
-  const [artistLine, setArtistLine] = useState('Ralph Anthony Segador — Founder & Lead Artist');
+  const [artistLine, setArtistLine] = useState('A Collective of Resident Tattoo Artists');
   const [bio1, setBio1] = useState(
     'Obsidian Ink Studio was founded on a simple belief — a tattoo should be treated as fine art, not a transaction. Every client begins with a private consultation where we translate your story, memory, or vision into a piece built exclusively for your skin.'
   );
   const [bio2, setBio2] = useState(
-    'Lead artist Ralph Anthony Segador trained across traditional Japanese, American, and European studios before opening Obsidian Ink, blending decades of technique with a modern, gallery-grade studio environment — hospital-level sterilization, premium pigments, and an atmosphere designed to feel more like an art residency than a shop.'
+    'Our resident artists trained across traditional Japanese, American, and European studios, bringing decades of combined technique to a modern, gallery-grade studio environment — hospital-level sterilization, premium pigments, and an atmosphere designed to feel more like an art residency than a shop.'
   );
   const [philosophyQuote, setPhilosophyQuote] = useState(
     '"A tattoo is not decoration. It is a permanent conversation between memory, identity, and skin — and every conversation deserves an artist who listens first."'
@@ -70,8 +70,8 @@ export default function About() {
         >
           <div className="relative aspect-[4/5] rounded-2xl overflow-hidden grain">
             <Image
-              src="/ralph-portrait.jpg"
-              alt="Ralph Anthony Segador, founder and lead artist"
+              src="https://images.unsplash.com/photo-1594091011122-3ae14fdbe243?w=900&h=1125&fit=crop&q=80"
+              alt="A resident artist at work inside Obsidian Ink Studio"
               fill
               className="object-cover contrast-110"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -80,8 +80,8 @@ export default function About() {
             <div className="absolute inset-0 bg-gradient-to-t from-ink-black via-transparent to-transparent" />
           </div>
           <div className="absolute -bottom-8 -right-8 glass-panel rounded-xl p-6 hidden sm:block">
-            <p className="font-display text-3xl text-gradient-gold">14+</p>
-            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mt-1">Years Crafting Ink</p>
+            <p className="font-display text-3xl text-gradient-gold">18+</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-white/50 mt-1">Years Combined Experience</p>
           </div>
         </motion.div>
 
