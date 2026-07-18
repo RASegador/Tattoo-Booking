@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { reviews as fallbackReviews } from '@/lib/data';
-import { ShieldIcon, StarIcon } from '@/components/icons/TattooIcons';
 
 type DisplayReview = {
   id: string | number;
@@ -19,6 +18,161 @@ type DisplayReview = {
 
 function isDataUrl(src: string) {
   return src.startsWith('data:');
+}
+
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          data-cursor-hover
+          aria-label={`${n} star${n > 1 ? 's' : ''}`}
+          className={`text-2xl leading-none transition-colors ${n <= value ? 'text-gold' : 'text-white/20 hover:text-white/40'}`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReviewForm({ onSubmitted }: { onSubmitted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  const handlePhotoChange = (file: File | null) => {
+    if (!file) {
+      setPhoto(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(typeof reader.result === 'string' ? reader.result : null);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/public/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, rating, review_text: reviewText, tattoo_image: photo || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || 'Could not submit your review. Please try again.');
+      }
+      setSent(true);
+      onSubmitted();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not submit your review. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div className="text-center mb-16">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          data-cursor-hover
+          className="px-6 py-3 border border-gold/40 text-gold text-sm uppercase tracking-[0.2em] hover:bg-gold hover:text-ink-black transition-all duration-300"
+        >
+          Leave a Review
+        </button>
+      </div>
+    );
+  }
+
+  if (sent) {
+    return (
+      <div className="glass-panel rounded-2xl border border-gold/30 p-8 max-w-xl mx-auto mb-16 text-center">
+        <p className="text-4xl mb-3">✦</p>
+        <p className="font-display text-xl mb-2">Thank You</p>
+        <p className="text-sm text-white/60 leading-relaxed">
+          Your review has been submitted and is pending approval. Once we review it, it&rsquo;ll appear here on the site.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel rounded-2xl border border-white/10 p-8 max-w-xl mx-auto mb-16">
+      <div className="flex items-center justify-between mb-6">
+        <p className="font-display text-xl">Share Your Experience</p>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          data-cursor-hover
+          aria-label="Close review form"
+          className="text-white/40 hover:text-gold transition-colors text-sm"
+        >
+          Cancel
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-5 text-left">
+        <div>
+          <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Your Name</label>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-white/5 border border-white/15 rounded-lg px-4 py-3 text-sm focus:border-gold outline-none transition-colors"
+          />
+        </div>
+        <div>
+          <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Rating</label>
+          <StarPicker value={rating} onChange={setRating} />
+        </div>
+        <div>
+          <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Your Review</label>
+          <textarea
+            required
+            rows={4}
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            placeholder="Tell us about your experience at the studio…"
+            className="w-full bg-white/5 border border-white/15 rounded-lg px-4 py-3 text-sm focus:border-gold outline-none transition-colors resize-none"
+          />
+        </div>
+        <div>
+          <label className="text-xs uppercase tracking-wide text-white/40 block mb-2">Photo of Your Tattoo (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+            className="text-sm text-white/60"
+          />
+          {photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo} alt="Preview" className="w-20 h-20 object-cover rounded-lg border border-white/10 mt-3" />
+          )}
+        </div>
+        {error && <p className="text-xs text-gold-light/90 leading-relaxed">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          data-cursor-hover
+          className="w-full py-4 bg-gold hover:bg-gold-light text-ink-black transition-colors text-sm tracking-[0.2em] uppercase font-medium disabled:opacity-60"
+        >
+          {loading ? 'Submitting…' : 'Submit Review'}
+        </button>
+      </form>
+    </div>
+  );
 }
 
 export default function Reviews() {
@@ -80,6 +234,8 @@ export default function Reviews() {
           </h2>
         </motion.div>
 
+        <ReviewForm onSubmitted={() => {}} />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((r, i) => (
             <motion.div
@@ -89,10 +245,12 @@ export default function Reviews() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: (i % 3) * 0.1 }}
               whileHover={{ y: -8 }}
-              className="card-hover-red glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-gold-light/40 transition-colors"
+              className="glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-gold/40 transition-colors"
             >
               <div className="relative h-40 w-full">
-                {isDataUrl(r.tattooImage) ? (
+                {!r.tattooImage ? (
+                  <div className="absolute inset-0 grunge-texture" />
+                ) : isDataUrl(r.tattooImage) ? (
                   <img
                     src={r.tattooImage}
                     alt={`Tattoo for ${r.name}`}
@@ -112,8 +270,12 @@ export default function Reviews() {
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gold/40">
-                    {isDataUrl(r.avatarUrl) ? (
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gold/40 flex items-center justify-center bg-gold/10">
+                    {!r.avatarUrl ? (
+                      <span className="text-gold text-sm font-display">
+                        {r.name.trim().charAt(0).toUpperCase() || '?'}
+                      </span>
+                    ) : isDataUrl(r.avatarUrl) ? (
                       <img
                         src={r.avatarUrl}
                         alt={r.name}
@@ -133,20 +295,12 @@ export default function Reviews() {
                   <div>
                     <p className="text-sm text-white flex items-center gap-1.5">
                       {r.name}
-                      {r.verified && (
-                        <span className="text-cyan" title="Verified client">
-                          <ShieldIcon className="w-3.5 h-3.5" aria-hidden />
-                        </span>
-                      )}
+                      {r.verified && <span className="text-cyan text-xs" title="Verified client">✓</span>}
                     </p>
                     <p className="text-xs text-white/40">{r.date}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 text-gold mb-3">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <StarIcon key={idx} filled={idx < r.rating} className="w-4 h-4" aria-hidden />
-                  ))}
-                </div>
+                <div className="text-gold text-sm mb-3">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
                 <p className="text-sm text-white/60 leading-relaxed">&ldquo;{r.text}&rdquo;</p>
               </div>
             </motion.div>

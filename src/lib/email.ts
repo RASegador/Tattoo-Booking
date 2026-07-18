@@ -362,6 +362,37 @@ export async function sendContactMessageEmail(data: {
   }
 }
 
+export async function sendNewTestimonialAlert(testimonial: {
+  name: string;
+  rating: number;
+  review_text: string;
+}): Promise<EmailResult> {
+  try {
+    const html = wrapper(
+      'New Review Submitted',
+      `<p>A client submitted a new review through the website. It's <strong style="color:#c9a24b;">pending approval</strong> and won't show publicly until you approve it in the admin panel.</p>
+      ${detailsTable(
+        detailRow('Name', testimonial.name || '') +
+          detailRow('Rating', `${'★'.repeat(testimonial.rating)}${'☆'.repeat(5 - testimonial.rating)}`) +
+          detailRow('Review', testimonial.review_text || '')
+      )}
+      ${goldButton(`${SITE_URL}/admin/testimonials`, 'Review in Admin Panel')}`
+    );
+    const client = getResendClient();
+    if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
+    const result = await client.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_NOTIFY_EMAIL,
+      subject: `New Review Pending Approval — ${testimonial.name || 'website visitor'}`,
+      html,
+    });
+    return { success: true, error: result.error ? String(result.error) : undefined };
+  } catch (err) {
+    console.error('sendNewTestimonialAlert failed:', err);
+    return { success: false, error: String(err) };
+  }
+}
+
 export type DailySummaryStats = {
   date: string;
   totalToday: number;
