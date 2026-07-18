@@ -41,6 +41,17 @@ export default function GalleryModal({
   const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
+  // Lock the page's own scroll while this full-screen overlay is open — otherwise
+  // the body and this modal's overflow-y-auto both scroll independently, producing
+  // two competing scrollbar thumbs stacked on the same edge.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
