@@ -338,13 +338,12 @@ export async function sendContactMessageEmail(data: {
   try {
     const html = wrapper(
       'New Contact Message',
-      `<p>Someone submitted the "Get In Touch" form on the website.</p>
+      `<p>You've received a new message from the studio's contact form.</p>
       ${detailsTable(
         detailRow('Name', data.name || '') +
           detailRow('Email', data.email || '') +
-          detailRow('Message', (data.message || '').replace(/\n/g, '<br/>'))
-      )}
-      <p style="color:rgba(255,255,255,0.5); font-size:12px;">Reply directly to this sender at ${data.email}.</p>`
+          detailRow('Message', data.message || '')
+      )}`
     );
     const client = getResendClient();
     if (!client) return { success: false, error: 'RESEND_API_KEY not set' };
@@ -352,7 +351,7 @@ export async function sendContactMessageEmail(data: {
       from: FROM_EMAIL,
       to: ADMIN_NOTIFY_EMAIL,
       replyTo: data.email || undefined,
-      subject: `New Contact Message from ${data.name || 'website visitor'}`,
+      subject: `New Contact Message — ${data.name || 'website visitor'}`,
       html,
     });
     return { success: true, error: result.error ? String(result.error) : undefined };
