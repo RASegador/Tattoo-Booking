@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { TattooMachineIcon } from '@/components/icons/TattooIcons';
 
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -43,7 +44,9 @@ export default function CustomCursor() {
 
   return (
     <>
-      <div ref={cursorRef} className={`custom-cursor ${hovering ? 'hovering' : ''}`} />
+      <div ref={cursorRef} className={`custom-cursor ${hovering ? 'hovering' : ''}`}>
+        <TattooMachineIcon aria-hidden />
+      </div>
       {ripples.map((r) => (
         <div key={r.id} className="ripple" style={{ left: r.x, top: r.y }} />
       ))}
