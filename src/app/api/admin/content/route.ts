@@ -44,3 +44,19 @@ export async function PUT(req: NextRequest) {
 
   return NextResponse.json({ section: rows[0] });
 }
+
+export async function DELETE(req: NextRequest) {
+  await ensureSchema();
+
+  const sectionKey = req.nextUrl.searchParams.get('section_key');
+  if (!sectionKey) {
+    return NextResponse.json({ error: 'section_key query param is required' }, { status: 400 });
+  }
+
+  await sql`DELETE FROM site_content WHERE section_key = ${sectionKey}`;
+
+  const session = await getSessionFromRequest(req);
+  await logActivity(session?.email, 'content.deleted', `Site content section "${sectionKey}" deleted`);
+
+  return NextResponse.json({ ok: true });
+}
