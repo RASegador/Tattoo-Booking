@@ -47,11 +47,11 @@ export default function Hero() {
         <div className="ink-splatter-layer">
           <InkSplatterIcon
             variant={1}
-            className="absolute -top-24 -left-16 w-[520px] h-[520px] text-crimson/25 blur-[70px] animate-parallaxDrift"
+            className="absolute -top-24 -left-16 w-[520px] h-[520px] text-gold/40 blur-[55px] animate-parallaxDrift"
           />
           <InkSplatterIcon
             variant={2}
-            className="absolute bottom-0 right-0 w-[460px] h-[460px] text-crimson/20 blur-[80px] animate-parallaxDrift"
+            className="absolute bottom-0 right-0 w-[460px] h-[460px] text-gold-light/35 blur-[65px] animate-parallaxDrift"
             style={{ animationDelay: '3s' }}
           />
         </div>
@@ -96,10 +96,10 @@ export default function Hero() {
           <Link
             href="/booking"
             data-cursor-hover
-            className="btn-pulse-border glow-hover-red group relative px-9 py-4 bg-crimson text-white text-sm tracking-[0.2em] uppercase overflow-hidden rounded-sm shadow-glow-red"
+            className="btn-pulse-border glow-hover-red group relative px-9 py-4 bg-gold text-ink-black text-sm tracking-[0.2em] uppercase overflow-hidden rounded-sm shadow-glow-red"
           >
             <span className="relative z-10">Book Appointment</span>
-            <span className="absolute inset-0 bg-crimson-light translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <span className="absolute inset-0 bg-gold-light translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
           </Link>
           <a
             href="#portfolio"
@@ -117,7 +117,7 @@ export default function Hero() {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
-        <BarbedWireIcon className="w-16 h-3 text-crimson/40" aria-hidden />
+        <BarbedWireIcon className="w-16 h-3 text-gold/45" aria-hidden />
         <span className="text-[10px] tracking-[0.3em] uppercase text-white/40">Scroll</span>
         <motion.div
           animate={{ y: [0, 10, 0] }}

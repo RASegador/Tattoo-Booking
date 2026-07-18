@@ -73,7 +73,7 @@ export default function Artists() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: i * 0.08 }}
               whileHover={{ y: -8 }}
-              className="card-hover-red group relative glass-panel rounded-xl overflow-hidden text-left border border-white/10 hover:border-crimson-light/50 transition-colors duration-300 flex flex-col"
+              className="card-hover-red group relative glass-panel rounded-xl overflow-hidden text-left border border-white/10 hover:border-gold-light/50 transition-colors duration-300 flex flex-col"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 {a.photo_data ? (
@@ -85,7 +85,7 @@ export default function Artists() {
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                 ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-crimson-light/60">
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-gold-light/60">
                     <InkBottleIcon className="w-14 h-14" aria-hidden />
                   </div>
                 )}
@@ -141,7 +141,7 @@ export default function Artists() {
           <Link
             href="/booking"
             data-cursor-hover
-            className="glow-hover-red inline-block px-9 py-4 border border-crimson text-crimson-light text-sm tracking-[0.2em] uppercase hover:bg-crimson hover:text-white transition-colors duration-300"
+            className="glow-hover-red inline-block px-9 py-4 border border-gold text-gold-light text-sm tracking-[0.2em] uppercase hover:bg-gold hover:text-ink-black transition-colors duration-300"
           >
             Book With An Artist
           </Link>

@@ -260,7 +260,7 @@ export default function ArtistProfileModal({
               <Link
                 href="/booking"
                 data-cursor-hover
-                className="btn-pulse-border glow-hover-red inline-block px-8 py-3.5 bg-crimson hover:bg-crimson-light text-sm uppercase tracking-[0.15em] transition-colors duration-300 rounded-lg shadow-glow-red"
+                className="btn-pulse-border glow-hover-red inline-block px-8 py-3.5 bg-gold hover:bg-gold-light text-ink-black text-sm uppercase tracking-[0.15em] transition-colors duration-300 rounded-lg shadow-glow-red"
               >
                 Book This Artist
               </Link>

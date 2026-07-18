@@ -22,7 +22,7 @@ export default function Loading() {
           />
         ))}
         <motion.span
-          className="w-3 h-3 rounded-full bg-crimson-light"
+          className="w-3 h-3 rounded-full bg-gold-light"
           animate={{ scale: [1, 1.25, 1] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
         />

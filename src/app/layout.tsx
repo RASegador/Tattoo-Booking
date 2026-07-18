@@ -6,6 +6,7 @@ import LoaderIntro from '@/components/LoaderIntro';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SmokeBackground from '@/components/SmokeBackground';
+import GoldSparkles from '@/components/GoldSparkles';
 import ChatWidget from '@/components/ChatWidget';
 
 const cinzel = Cinzel({ subsets: ['latin'], variable: '--font-cinzel', weight: ['400', '500', '600', '700', '900'] });
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LoaderIntro />
         <CustomCursor />
         <SmokeBackground />
+        <GoldSparkles />
         <Navbar />
         <main className="relative z-10">{children}</main>
         <Footer />

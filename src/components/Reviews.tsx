@@ -89,7 +89,7 @@ export default function Reviews() {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: (i % 3) * 0.1 }}
               whileHover={{ y: -8 }}
-              className="card-hover-red glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-crimson-light/40 transition-colors"
+              className="card-hover-red glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-gold-light/40 transition-colors"
             >
               <div className="relative h-40 w-full">
                 {isDataUrl(r.tattooImage) ? (

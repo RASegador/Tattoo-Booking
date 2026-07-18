@@ -162,7 +162,7 @@ export default function ChatWidget() {
         transition={{ duration: 0.4, ease: 'easeOut', delay: 0.6 }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
-        className="fixed bottom-6 right-6 z-[9000] flex h-14 w-14 items-center justify-center rounded-full border border-crimson/60 bg-ink-charcoal text-crimson-light shadow-glow-red animate-pulseGlowRed"
+        className="fixed bottom-6 right-6 z-[9000] flex h-14 w-14 items-center justify-center rounded-full border border-gold/60 bg-ink-charcoal text-gold-light shadow-glow-red animate-pulseGlowRed"
       >
         {open ? <CloseIcon /> : <ChatIcon />}
       </motion.button>
@@ -198,7 +198,7 @@ export default function ChatWidget() {
                   <div
                     className={`max-w-[85%] whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
                       m.role === 'user'
-                        ? 'bg-crimson/25 border border-crimson/40 text-white'
+                        ? 'bg-gold/20 border border-gold/40 text-white'
                         : 'bg-white/5 border border-white/10 text-white/85'
                     }`}
                   >
@@ -242,7 +242,7 @@ export default function ChatWidget() {
                   type="button"
                   data-cursor-hover
                   onClick={() => setAttachedImage(null)}
-                  className="text-xs text-white/40 hover:text-crimson-light transition-colors"
+                  className="text-xs text-white/40 hover:text-gold-light transition-colors"
                 >
                   Remove
                 </button>

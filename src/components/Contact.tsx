@@ -59,19 +59,19 @@ export default function Contact() {
 
           <div className="space-y-5 mb-10 text-sm text-white/70">
             <p className="flex items-start gap-3">
-              <LocationIcon className="w-5 h-5 text-crimson-light shrink-0 mt-0.5" aria-hidden />
+              <LocationIcon className="w-5 h-5 text-gold-light shrink-0 mt-0.5" aria-hidden />
               <span><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Address</span>{address}</span>
             </p>
             <p className="flex items-start gap-3">
-              <PhoneIcon className="w-5 h-5 text-crimson-light shrink-0 mt-0.5" aria-hidden />
+              <PhoneIcon className="w-5 h-5 text-gold-light shrink-0 mt-0.5" aria-hidden />
               <span><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Phone</span>{phone}</span>
             </p>
             <p className="flex items-start gap-3">
-              <EmailIcon className="w-5 h-5 text-crimson-light shrink-0 mt-0.5" aria-hidden />
+              <EmailIcon className="w-5 h-5 text-gold-light shrink-0 mt-0.5" aria-hidden />
               <span><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Email</span>{email}</span>
             </p>
             <p className="flex items-start gap-3">
-              <ClockIcon className="w-5 h-5 text-crimson-light shrink-0 mt-0.5" aria-hidden />
+              <ClockIcon className="w-5 h-5 text-gold-light shrink-0 mt-0.5" aria-hidden />
               <span><span className="text-white/40 uppercase tracking-wide text-xs block mb-1">Business Hours</span>{hours}</span>
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function Contact() {
         >
           {sent ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-16">
-              <StarIcon filled className="w-12 h-12 text-crimson-light mb-4 drop-shadow-[0_0_16px_rgba(179,18,46,0.6)]" aria-hidden />
+              <StarIcon filled className="w-12 h-12 text-gold-light mb-4 drop-shadow-[0_0_16px_rgba(201,162,75,0.6)]" aria-hidden />
               <p className="font-display text-xl mb-2">Message Sent</p>
               <p className="text-white/50 text-sm">We&rsquo;ll get back to you within 24 hours.</p>
             </div>
@@ -117,7 +117,7 @@ export default function Contact() {
                 type="submit"
                 disabled={loading}
                 data-cursor-hover
-                className="btn-pulse-border glow-hover-red w-full py-4 bg-crimson hover:bg-crimson-light transition-colors text-sm tracking-[0.2em] uppercase disabled:opacity-60 shadow-glow-red"
+                className="btn-pulse-border glow-hover-red w-full py-4 bg-gold hover:bg-gold-light text-ink-black transition-colors text-sm tracking-[0.2em] uppercase disabled:opacity-60 shadow-glow-red"
               >
                 {loading ? 'Sending…' : 'Send Message'}
               </button>

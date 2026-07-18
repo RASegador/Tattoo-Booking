@@ -49,14 +49,14 @@ export default function LoaderIntro() {
                 cx="70"
                 cy="70"
                 r="8"
-                fill="#b3122e"
+                fill="#e6c979"
                 initial={{ scale: 0, opacity: 0.9 }}
                 animate={{ scale: [0, 1.1, 1], opacity: [0.9, 1, 0.85] }}
                 transition={{ duration: 1.2, delay: 0.3, ease: 'easeOut' }}
               />
               <motion.path
                 d="M40 90 Q 55 40 70 55 Q 85 70 100 30"
-                stroke="#e0193b"
+                stroke="#c9a24b"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"

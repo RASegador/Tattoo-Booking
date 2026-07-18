@@ -149,7 +149,7 @@ export default function ArtworkViewer({
               onClick={() => setLiked((l) => ({ ...l, [artwork.id]: !l[artwork.id] }))}
               data-cursor-hover
               className={`glow-hover-red flex items-center gap-2 px-4 py-2 border rounded-full text-sm transition-colors ${
-                liked[artwork.id] ? 'border-crimson text-crimson-light' : 'border-white/20 text-white/60 hover:border-white/50'
+                liked[artwork.id] ? 'border-gold text-gold-light' : 'border-white/20 text-white/60 hover:border-white/50'
               }`}
             >
               <HeartIcon filled={!!liked[artwork.id]} className="w-4 h-4" aria-hidden />

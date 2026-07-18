@@ -78,10 +78,10 @@ export default function FolderCard({
         transition={{ duration: 5 + (index % 3), repeat: Infinity, ease: 'easeInOut', delay: index * 0.2 }}
         whileHover={{ scale: 1.06, y: -14 }}
         whileTap={{ scale: 0.98 }}
-        className="card-hover-red group relative cursor-pointer rounded-2xl p-8 h-56 flex flex-col justify-between overflow-hidden glass-panel border border-white/10 hover:border-crimson-light/50 transition-colors duration-300"
+        className="card-hover-red group relative cursor-pointer rounded-2xl p-8 h-56 flex flex-col justify-between overflow-hidden glass-panel border border-white/10 hover:border-gold-light/50 transition-colors duration-300"
       >
         {/* glow */}
-        <div className="absolute -inset-1 bg-gradient-to-br from-crimson/0 via-crimson/0 to-crimson/0 group-hover:from-crimson/15 group-hover:via-transparent group-hover:to-gold/10 transition-all duration-500 pointer-events-none" />
+        <div className="absolute -inset-1 bg-gradient-to-br from-gold/0 via-gold/0 to-gold/0 group-hover:from-gold/20 group-hover:via-transparent group-hover:to-gold-light/15 transition-all duration-500 pointer-events-none" />
 
         {/* folder corner fold */}
         <motion.div
@@ -92,7 +92,7 @@ export default function FolderCard({
 
         <div className="flex items-start justify-between" style={{ transform: 'translateZ(40px)' }}>
           {CategoryIcon ? (
-            <CategoryIcon className="w-9 h-9 text-crimson-light drop-shadow-[0_0_10px_rgba(179,18,46,0.55)]" aria-hidden />
+            <CategoryIcon className="w-9 h-9 text-gold-light drop-shadow-[0_0_10px_rgba(201,162,75,0.55)]" aria-hidden />
           ) : (
             <span className="text-4xl drop-shadow-[0_0_12px_rgba(201,162,75,0.4)]">{category.icon}</span>
           )}
@@ -108,7 +108,7 @@ export default function FolderCard({
 
         {/* floating spark on hover */}
         <motion.span
-          className="absolute bottom-4 right-4 text-lg text-crimson-light opacity-0 group-hover:opacity-70"
+          className="absolute bottom-4 right-4 text-lg text-gold-light opacity-0 group-hover:opacity-70"
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >

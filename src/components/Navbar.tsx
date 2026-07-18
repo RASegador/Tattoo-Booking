@@ -38,7 +38,7 @@ export default function Navbar() {
           className="flex items-center gap-2 font-display text-xl tracking-[0.25em] text-gradient-gold"
           data-cursor-hover
         >
-          <TattooMachineIcon className="w-5 h-5 text-crimson-light" aria-hidden />
+          <TattooMachineIcon className="w-5 h-5 text-gold-light" aria-hidden />
           OBSIDIAN INK
         </Link>
         <nav className="hidden md:flex items-center gap-10 text-sm tracking-[0.15em] uppercase text-white/80">
@@ -52,7 +52,7 @@ export default function Navbar() {
           <Link
             href="/booking"
             data-cursor-hover
-            className="glow-hover-red px-5 py-2.5 border border-crimson/70 text-crimson-light text-xs tracking-[0.2em] uppercase hover:bg-crimson hover:text-white hover:border-crimson transition-all duration-300"
+            className="glow-hover-red px-5 py-2.5 border border-gold/70 text-gold-light text-xs tracking-[0.2em] uppercase hover:bg-gold hover:text-ink-black hover:border-gold transition-all duration-300"
           >
             Book Now
           </Link>

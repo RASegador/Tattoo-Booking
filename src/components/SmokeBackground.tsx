@@ -9,7 +9,7 @@ type Particle = {
   speedY: number;
   speedX: number;
   alpha: number;
-  hue: 'gold' | 'crimson' | 'cyan';
+  hue: 'gold' | 'cyan';
 };
 
 export default function SmokeBackground() {
@@ -26,21 +26,22 @@ export default function SmokeBackground() {
 
     const colors: Record<Particle['hue'], string> = {
       gold: '201,162,75',
-      crimson: '179,18,46',
       cyan: '63,240,224',
     };
 
+    // Gold-dominant palette (black & gold theme) — alpha range raised from the
+    // previous 0.02-0.07 to 0.05-0.13 so the gold smoke reads as a clear,
+    // visible presence rather than a faint tint.
     const particles: Particle[] = Array.from({ length: 46 }).map(() => ({
       x: Math.random() * width,
       y: height + Math.random() * height,
       r: 40 + Math.random() * 120,
       speedY: 0.15 + Math.random() * 0.35,
       speedX: (Math.random() - 0.5) * 0.2,
-      alpha: 0.02 + Math.random() * 0.05,
+      alpha: 0.05 + Math.random() * 0.08,
       hue: (() => {
         const r = Math.random();
-        if (r < 0.45) return 'crimson';
-        if (r < 0.9) return 'gold';
+        if (r < 0.82) return 'gold';
         return 'cyan';
       })(),
     }));
@@ -81,8 +82,8 @@ export default function SmokeBackground() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0" />
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-crimson/20 rounded-full blur-[140px] animate-glowPulse" />
-      <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-gold/10 rounded-full blur-[140px] animate-glowPulse" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gold/25 rounded-full blur-[130px] animate-glowPulse" />
+      <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-gold-light/20 rounded-full blur-[130px] animate-glowPulse" style={{ animationDelay: '1.5s' }} />
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-cyan/10 rounded-full blur-[140px] animate-glowPulse" style={{ animationDelay: '3s' }} />
       <div className="absolute inset-0 bg-noise opacity-40" />
     </div>

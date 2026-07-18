@@ -100,7 +100,7 @@ export default function FeaturedArtist() {
               <span className="absolute top-5 left-5 flex items-center gap-1.5 px-4 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
                 <StarIcon filled className="w-3.5 h-3.5" aria-hidden /> Featured Artist
               </span>
-              <span className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-crimson-light/60 text-crimson-light bg-black/50 backdrop-blur-sm shadow-glow-red">
+              <span className="absolute top-5 right-5 flex items-center gap-1.5 px-3 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-gold-light/60 text-gold-light bg-black/50 backdrop-blur-sm shadow-glow-red">
                 <ShieldIcon className="w-3.5 h-3.5" aria-hidden /> Verified
               </span>
             </div>
@@ -141,7 +141,7 @@ export default function FeaturedArtist() {
             <Link
               href="/booking"
               data-cursor-hover
-              className="btn-pulse-border glow-hover-red inline-block px-9 py-4 bg-crimson hover:bg-crimson-light text-sm tracking-[0.2em] uppercase transition-colors duration-300 rounded-lg shadow-glow-red"
+              className="btn-pulse-border glow-hover-red inline-block px-9 py-4 bg-gold hover:bg-gold-light text-ink-black text-sm tracking-[0.2em] uppercase transition-colors duration-300 rounded-lg shadow-glow-red"
             >
               Book With {artist.name.split(' ')[0]} {artist.name.split(' ')[1] || ''}
             </Link>
