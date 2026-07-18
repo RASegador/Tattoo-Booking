@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { GalleryArtwork } from '@/components/portfolio/GalleryModal';
 
@@ -84,8 +85,13 @@ export default function FeaturedArtist() {
             className="relative"
           >
             <div className="relative aspect-[4/5] rounded-2xl overflow-hidden grain">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={artist.photo_data} alt={artist.name} className="w-full h-full object-cover" />
+              <Image
+                src={artist.photo_data}
+                alt={artist.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-ink-black via-transparent to-transparent" />
               <span className="absolute top-5 left-5 px-4 py-2 text-xs uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
                 ★ Featured Artist
@@ -119,8 +125,7 @@ export default function FeaturedArtist() {
               <div className="grid grid-cols-4 gap-3 mb-10">
                 {works.map((w) => (
                   <div key={w.id} className="relative aspect-square rounded-lg overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={w.image_data} alt={w.title} className="w-full h-full object-cover" />
+                    <Image src={w.image_data} alt={w.title} fill sizes="150px" className="object-cover" />
                   </div>
                 ))}
               </div>

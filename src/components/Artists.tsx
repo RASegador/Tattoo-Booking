@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import ArtistProfileModal, { type ModalArtist } from '@/components/artists/ArtistProfileModal';
 
@@ -75,11 +76,12 @@ export default function Artists() {
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 {a.photo_data ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={a.photo_data}
                     alt={a.name}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                 ) : (
                   <div className="w-full h-full bg-white/5 flex items-center justify-center text-4xl">🎨</div>

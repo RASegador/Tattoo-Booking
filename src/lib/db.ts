@@ -9,9 +9,17 @@ import { categories as seedCategories, getArtworksForCategory, reviews as seedRe
 // This explains both the earlier "admin bookings only shows 1 row" bug and the "most recently
 // written site_content row is missing" bug — both are the same root cause, not the bound-
 // parameter issue they were first (incorrectly) attributed to.
-export const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || '', {
-  fetchOptions: { cache: 'no-store' },
-});
+// Falls back to a syntactically-valid (but non-functional) placeholder connection string when
+// DATABASE_URL/POSTGRES_URL isn't set. The neon() constructor validates its argument's format
+// eagerly and throws on an empty string — that crash was killing `next build` locally (and any
+// build environment without the env var configured) during Next's "collect page data" step,
+// which imports every route module just to inspect its exports, even though none of these are
+// statically executed at build time (all routes here are `force-dynamic`). Production on Vercel
+// always has the real DATABASE_URL set, so this fallback is never actually used for queries.
+export const sql = neon(
+  process.env.DATABASE_URL || process.env.POSTGRES_URL || 'postgres://user:pass@localhost:5432/db',
+  { fetchOptions: { cache: 'no-store' } }
+);
 
 let schemaEnsured = false;
 

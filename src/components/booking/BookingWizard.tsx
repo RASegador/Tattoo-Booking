@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import Calendar from './Calendar';
 import { Booking, generateBookingId, saveBooking, TIME_SLOTS } from '@/lib/bookings';
@@ -371,8 +372,13 @@ export default function BookingWizard() {
                         }`}
                       >
                         {a.photo_data && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={a.photo_data} alt={a.name} className="w-12 h-12 rounded-full object-cover" />
+                          <Image
+                            src={a.photo_data}
+                            alt={a.name}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
                         )}
                         <span>{a.name}</span>
                         {!a.available && <span className="text-[10px] text-white/40 uppercase">Fully Booked</span>}

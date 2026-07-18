@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { formatPHPRange } from '@/lib/currency';
 import type { GalleryArtwork } from '@/components/portfolio/GalleryModal';
@@ -145,8 +146,13 @@ export default function ArtistProfileModal({
 
           <div className="grid md:grid-cols-[320px_1fr] gap-0">
             <div className="relative aspect-[4/5] md:aspect-auto md:h-full min-h-[280px]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={artist.photo_data} alt={artist.name} className="absolute inset-0 w-full h-full object-cover" />
+              <Image
+                src={artist.photo_data}
+                alt={artist.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 320px"
+                className="object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-ink-charcoal via-transparent to-transparent md:bg-gradient-to-r" />
               {artist.featured && (
                 <span className="absolute top-4 left-4 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-full border border-gold text-gold bg-black/50 backdrop-blur-sm">
@@ -232,11 +238,12 @@ export default function ArtistProfileModal({
                   <div className="grid grid-cols-3 gap-2">
                     {portfolio.slice(0, 6).map((p) => (
                       <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={p.image_data}
                           alt={p.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          fill
+                          sizes="120px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                         {(p.price_min || p.price_max) && (
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-1.5 pt-4 pb-1 opacity-0 group-hover:opacity-100 transition-opacity">
